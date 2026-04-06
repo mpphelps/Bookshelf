@@ -1,0 +1,45 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Shelf {
+  WANT_TO_READ
+  READING
+  FINISHED
+}
+
+model User {
+  id        String    @id @default(cuid())
+  email     String    @unique
+  name      String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  books     Book[]
+}
+
+model Book {
+  id        String    @id @default(cuid())
+  title     String
+  author    String
+  shelf     Shelf     @default(WANT_TO_READ)
+  rating    Int?
+  userId    String
+  user      User      @relation(fields: [userId], references: [id])
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  notes     Note[]
+}
+
+model Note {
+  id        String    @id @default(cuid())
+  content   String
+  bookId    String
+  book      Book      @relation(fields: [bookId], references: [id])
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
