@@ -3,6 +3,14 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* ============================================================
+   MISSION CONTROL THEME
+   Inspired by deep-space terminal panels and CRT readouts.
+   - Amber primary  (warning lights)
+   - Teal accent    (instrumentation)
+   - Hairline borders, sharp 2px radius, monospace UI
+   ============================================================ */
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -28,104 +36,193 @@
   --color-chart-3: var(--chart-3);
   --color-chart-4: var(--chart-4);
   --color-chart-5: var(--chart-5);
-  --radius-sm: calc(var(--radius) * 0.6);
-  --radius-md: calc(var(--radius) * 0.8);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) * 1.4);
-  --radius-2xl: calc(var(--radius) * 1.8);
-  --radius-3xl: calc(var(--radius) * 2.2);
-  --radius-4xl: calc(var(--radius) * 2.6);
-  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif,
-    "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+
+  --radius-sm: calc(var(--radius) * 0.5);
+  --radius-md: var(--radius);
+  --radius-lg: calc(var(--radius) * 1.5);
+  --radius-xl: calc(var(--radius) * 2);
+  --radius-2xl: calc(var(--radius) * 3);
+  --radius-3xl: calc(var(--radius) * 4);
+  --radius-4xl: calc(var(--radius) * 5);
+
+  --font-sans: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --font-display: "Michroma", "Eurostile", ui-sans-serif, system-ui, sans-serif;
 }
-
-/* ============================================
-   SCI-FI THEME
-
-   Palette concept:
-   - Background:   deep space black with blue undertone
-   - Primary:      electric cyan (the "glow")
-   - Secondary:    deep indigo (supporting surfaces)
-   - Accent:       violet/magenta (highlights)
-   - Destructive:  warning red-orange
-   - Borders:      faint cyan-tinted edges
-   ============================================ */
 
 :root {
-  --radius: 0.375rem;
+  --radius: 0.125rem;
 
-  /* Surfaces */
-  --background: oklch(0.13 0.02 260);
-  --foreground: oklch(0.93 0.01 210);
-  --card: oklch(0.17 0.025 260);
-  --card-foreground: oklch(0.93 0.01 210);
-  --popover: oklch(0.15 0.025 260);
-  --popover-foreground: oklch(0.93 0.01 210);
+  /* Surfaces — the void with a barely-there blue cast */
+  --background: oklch(0.11 0.015 240);
+  --foreground: oklch(0.92 0.012 200);
 
-  /* Primary — electric cyan */
-  --primary: oklch(0.75 0.15 195);
-  --primary-foreground: oklch(0.13 0.02 260);
+  --card: oklch(0.14 0.018 240);
+  --card-foreground: oklch(0.92 0.012 200);
 
-  /* Secondary — deep indigo */
-  --secondary: oklch(0.25 0.06 280);
-  --secondary-foreground: oklch(0.90 0.02 280);
+  --popover: oklch(0.13 0.018 240);
+  --popover-foreground: oklch(0.92 0.012 200);
 
-  /* Muted — dark slate */
-  --muted: oklch(0.20 0.02 260);
-  --muted-foreground: oklch(0.60 0.02 210);
+  /* Primary — Nostromo amber */
+  --primary: oklch(0.80 0.16 75);
+  --primary-foreground: oklch(0.11 0.015 240);
 
-  /* Accent — violet/magenta */
-  --accent: oklch(0.50 0.18 300);
-  --accent-foreground: oklch(0.95 0.01 300);
+  /* Secondary — dim panel */
+  --secondary: oklch(0.20 0.025 240);
+  --secondary-foreground: oklch(0.88 0.015 200);
 
-  /* Destructive — warning red-orange */
-  --destructive: oklch(0.60 0.22 25);
-  --destructive-foreground: oklch(0.95 0.01 25);
+  /* Muted — the hum of subsystems */
+  --muted: oklch(0.16 0.02 240);
+  --muted-foreground: oklch(0.55 0.018 220);
 
-  /* Edges & focus */
-  --border: oklch(0.28 0.03 240);
-  --input: oklch(0.25 0.03 240);
-  --ring: oklch(0.70 0.14 195);
+  /* Accent — instrumentation teal */
+  --accent: oklch(0.72 0.13 200);
+  --accent-foreground: oklch(0.11 0.015 240);
 
-  /* Charts — neon palette */
-  --chart-1: oklch(0.75 0.15 195);
-  --chart-2: oklch(0.60 0.20 300);
-  --chart-3: oklch(0.80 0.18 160);
-  --chart-4: oklch(0.70 0.20 60);
-  --chart-5: oklch(0.65 0.22 340);
+  --destructive: oklch(0.62 0.22 25);
+  --destructive-foreground: oklch(0.96 0.012 25);
+
+  --border: oklch(0.26 0.025 220);
+  --input: oklch(0.20 0.025 220);
+  --ring: oklch(0.80 0.16 75);
+
+  --chart-1: oklch(0.80 0.16 75);
+  --chart-2: oklch(0.72 0.13 200);
+  --chart-3: oklch(0.62 0.22 25);
+  --chart-4: oklch(0.65 0.15 280);
+  --chart-5: oklch(0.75 0.18 140);
 }
 
-/* .dark — even deeper variant for explicit dark mode toggle */
-.dark {
-  --background: oklch(0.10 0.02 260);
-  --foreground: oklch(0.95 0.01 210);
-  --card: oklch(0.14 0.025 260);
-  --card-foreground: oklch(0.95 0.01 210);
-  --popover: oklch(0.12 0.025 260);
-  --popover-foreground: oklch(0.95 0.01 210);
+@layer base {
+  * {
+    border-color: var(--border);
+  }
 
-  --primary: oklch(0.78 0.16 195);
-  --primary-foreground: oklch(0.10 0.02 260);
+  html {
+    color-scheme: dark;
+  }
 
-  --secondary: oklch(0.22 0.06 280);
-  --secondary-foreground: oklch(0.92 0.02 280);
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans);
+    font-feature-settings: "tnum" 1, "ss01" 1, "calt" 0;
+    -webkit-font-smoothing: antialiased;
+    position: relative;
+    background-image:
+      linear-gradient(
+        to right,
+        oklch(0.22 0.025 220 / 0.35) 1px,
+        transparent 1px
+      ),
+      linear-gradient(
+        to bottom,
+        oklch(0.22 0.025 220 / 0.35) 1px,
+        transparent 1px
+      );
+    background-size: 64px 64px;
+    background-position: -1px -1px;
+  }
 
-  --muted: oklch(0.18 0.02 260);
-  --muted-foreground: oklch(0.55 0.02 210);
+  /* Faint scan lines — the CRT signal */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background: repeating-linear-gradient(
+      to bottom,
+      transparent 0,
+      transparent 2px,
+      oklch(1 0 0 / 0.015) 2px,
+      oklch(1 0 0 / 0.015) 3px
+    );
+    z-index: 1;
+  }
 
-  --accent: oklch(0.55 0.20 300);
-  --accent-foreground: oklch(0.95 0.01 300);
+  /* Vignette — gentle frame, like staring through a porthole */
+  body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background: radial-gradient(
+      ellipse at center,
+      transparent 50%,
+      oklch(0.08 0.02 240 / 0.5) 100%
+    );
+    z-index: 1;
+  }
+}
 
-  --destructive: oklch(0.60 0.22 25);
-  --destructive-foreground: oklch(0.95 0.01 25);
+/* ============================================================
+   Terminal-flavored utilities
+   ============================================================ */
 
-  --border: oklch(0.25 0.03 240);
-  --input: oklch(0.22 0.03 240);
-  --ring: oklch(0.75 0.15 195);
+/* Corner-bracket panel — like a targeting reticle around content */
+.panel-brackets {
+  position: relative;
+}
+.panel-brackets::before,
+.panel-brackets::after {
+  content: "";
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border-color: var(--primary);
+  border-style: solid;
+  border-width: 0;
+  transition: border-color 200ms ease;
+}
+.panel-brackets::before {
+  top: -1px;
+  left: -1px;
+  border-top-width: 1px;
+  border-left-width: 1px;
+}
+.panel-brackets::after {
+  bottom: -1px;
+  right: -1px;
+  border-bottom-width: 1px;
+  border-right-width: 1px;
+}
 
-  --chart-1: oklch(0.78 0.16 195);
-  --chart-2: oklch(0.65 0.22 300);
-  --chart-3: oklch(0.82 0.18 160);
-  --chart-4: oklch(0.72 0.20 60);
-  --chart-5: oklch(0.68 0.24 340);
+/* Status dot — pulsing readout indicator */
+.status-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 9999px;
+  background: currentColor;
+  box-shadow: 0 0 8px currentColor;
+  flex-shrink: 0;
+}
+.status-dot.is-pulsing {
+  animation: status-pulse 1.6s ease-in-out infinite;
+}
+@keyframes status-pulse {
+  0%,
+  100% {
+    opacity: 1;
+    box-shadow: 0 0 12px currentColor;
+  }
+  50% {
+    opacity: 0.55;
+    box-shadow: 0 0 4px currentColor;
+  }
+}
+
+/* Display heading utility */
+.display {
+  font-family: var(--font-display);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+/* Micro label — UPPERCASE, tracked-out, for telemetry rows */
+.micro-label {
+  font-size: 0.6875rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
 }
