@@ -4,7 +4,11 @@
       "mcp__context7__query-docs",
       "Bash(rm \"C:/Users/Michael/Desktop/Software_Development/Dev/RemixPrismaLearning/.claude/commands/e2e.md\")",
       "Bash(rmdir \"C:/Users/Michael/Desktop/Software_Development/Dev/RemixPrismaLearning/.claude/commands\")",
-      "mcp__context7__resolve-library-id"
+      "mcp__context7__resolve-library-id",
+      "Bash(mkdir -p /c/Users/Michael/.claude/skills)",
+      "Bash(mkdir -p /c/Users/Michael/Desktop/Software_Development/Dev/Bookshelf/.claude/skills)",
+      "Bash(mv /c/Users/Michael/.agents/skills/frontend-design /c/Users/Michael/.claude/skills/frontend-design)",
+      "Bash(mv /c/Users/Michael/Desktop/Software_Development/Dev/Bookshelf/.agents/skills/frontend-design /c/Users/Michael/Desktop/Software_Development/Dev/Bookshelf/.claude/skills/frontend-design)"
     ]
   }
 }
