@@ -1,4 +1,4 @@
-import { redirect } from "react-router";
+import { Link, redirect } from "react-router";
 import type { Route } from "./+types/shelves";
 import { getAuthenticatedUser } from "../services/auth.service";
 import { getShelvesOverview } from "../services/book.service";
@@ -123,10 +123,10 @@ export default function Shelves({ loaderData }: Route.ComponentProps) {
                   : "text-muted-foreground";
 
             return (
-              <a
+              <Link
                 key={shelf.key}
-                href={`/shelves/${shelf.key}`}
-                className="group panel-brackets block bg-card/60 hover:bg-card transition-all duration-200 border border-border/60 hover:border-primary/40 p-6"
+                to={`/shelves/${shelf.key}`}
+                className="group panel-brackets block bg-card/60 hover:bg-card transition-all duration-300 border border-border/60 hover:border-primary/50 hover:shadow-[0_0_24px_-4px_oklch(0.80_0.16_75/0.35),inset_0_0_0_1px_oklch(0.80_0.16_75/0.15)] p-6"
               >
                 {/* slot ID + status */}
                 <div className="flex items-center justify-between mb-8">
@@ -166,7 +166,7 @@ export default function Shelves({ loaderData }: Route.ComponentProps) {
                     →
                   </span>
                 </div>
-              </a>
+              </Link>
             );
           })}
         </div>
