@@ -14,5 +14,5 @@ export async function loader({ request }: Route.LoaderArgs) {
   const { accessToken } = await handleCallback(code);
   const headers = await createSessionHeaders(accessToken);
 
-  return redirect("/shelves", { headers });
+  return redirect("/", { headers });
 }

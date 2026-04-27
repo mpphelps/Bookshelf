@@ -14,10 +14,7 @@ export async function loader({ request }: Route.LoaderArgs) {
   return { user, shelves };
 }
 
-const SHELF_STATUS: Record<
-  string,
-  { label: string; tone: "primary" | "accent" | "muted"; pulsing: boolean }
-> = {
+const SHELF_STATUS: Record<string, { label: string; tone: "primary" | "accent" | "muted"; pulsing: boolean }> = {
   WANT_TO_READ: { label: "QUEUED", tone: "muted", pulsing: false },
   READING: { label: "ACTIVE", tone: "primary", pulsing: true },
   FINISHED: { label: "ARCHIVED", tone: "accent", pulsing: false },
@@ -43,22 +40,15 @@ export default function Shelves({ loaderData }: Route.ComponentProps) {
       <header className="border-b border-border/80 bg-background/60 backdrop-blur-sm">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-3 text-xs">
           <div className="flex items-center gap-6">
-            <span className="display text-foreground tracking-[0.2em]">
-              BOOKSHELF
-            </span>
+            <span className="display text-foreground tracking-[0.2em]">BOOKSHELF</span>
             <span className="text-muted-foreground hidden md:inline">
               <span className="text-primary">/</span> MISSION_LOG
             </span>
-            <span className="micro-label hidden md:inline">
-              v0.1.0 · sector-7
-            </span>
+            <span className="micro-label hidden md:inline">v0.1.0 · sector-7</span>
           </div>
           <div className="flex items-center gap-5">
             <span className="text-muted-foreground hidden sm:flex items-center gap-2">
-              <span
-                className="status-dot is-pulsing text-accent"
-                aria-hidden
-              />
+              <span className="status-dot is-pulsing text-accent" aria-hidden />
               <span className="micro-label !text-foreground/80">link ok</span>
             </span>
             <span className="micro-label">
@@ -83,20 +73,14 @@ export default function Shelves({ loaderData }: Route.ComponentProps) {
             <h1 className="display text-3xl md:text-4xl text-foreground leading-[1.1]">
               Greetings, {user.name.split(" ")[0]}.
               <br />
-              <span className="text-primary">
-                {formatCount(total)}
-              </span>{" "}
-              <span className="text-muted-foreground text-2xl md:text-3xl">
-                volumes on record.
-              </span>
+              <span className="text-primary">{formatCount(total)}</span>{" "}
+              <span className="text-muted-foreground text-2xl md:text-3xl">volumes on record.</span>
             </h1>
           </div>
 
           <div className="col-span-12 md:col-span-4 md:text-right space-y-1">
             <div className="micro-label">timestamp / utc</div>
-            <div className="font-mono text-sm text-foreground tabular-nums">
-              {timestamp()}
-            </div>
+            <div className="font-mono text-sm text-foreground tabular-nums">{timestamp()}</div>
             <div className="micro-label pt-2">database integrity</div>
             <div className="font-mono text-sm text-accent flex md:justify-end items-center gap-2">
               <span className="status-dot text-accent" aria-hidden /> NOMINAL
@@ -115,39 +99,25 @@ export default function Shelves({ loaderData }: Route.ComponentProps) {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {shelves.map((shelf, idx) => {
             const meta = SHELF_STATUS[shelf.key] ?? SHELF_STATUS.WANT_TO_READ;
-            const toneClass =
-              meta.tone === "primary"
-                ? "text-primary"
-                : meta.tone === "accent"
-                  ? "text-accent"
-                  : "text-muted-foreground";
+            const toneClass = meta.tone === "primary" ? "text-primary" : meta.tone === "accent" ? "text-accent" : "text-muted-foreground";
 
             return (
               <Link
                 key={shelf.key}
-                to={`/shelves/${shelf.key}`}
+                to={`/${shelf.key}`}
                 className="group panel-brackets block bg-card/60 hover:bg-card transition-all duration-300 border border-border/60 hover:border-primary/50 hover:shadow-[0_0_24px_-4px_oklch(0.80_0.16_75/0.35),inset_0_0_0_1px_oklch(0.80_0.16_75/0.15)] p-6"
               >
                 {/* slot ID + status */}
                 <div className="flex items-center justify-between mb-8">
-                  <span className="micro-label">
-                    SLOT_{(idx + 1).toString().padStart(2, "0")}
-                  </span>
-                  <span
-                    className={`flex items-center gap-2 micro-label ${toneClass}`}
-                  >
-                    <span
-                      className={`status-dot ${meta.pulsing ? "is-pulsing" : ""}`}
-                      aria-hidden
-                    />
+                  <span className="micro-label">SLOT_{(idx + 1).toString().padStart(2, "0")}</span>
+                  <span className={`flex items-center gap-2 micro-label ${toneClass}`}>
+                    <span className={`status-dot ${meta.pulsing ? "is-pulsing" : ""}`} aria-hidden />
                     {meta.label}
                   </span>
                 </div>
 
                 {/* shelf name */}
-                <h2 className="display text-base md:text-lg text-foreground mb-6 leading-tight">
-                  {shelf.label}
-                </h2>
+                <h2 className="display text-base md:text-lg text-foreground mb-6 leading-tight">{shelf.label}</h2>
 
                 {/* count readout */}
                 <div className="flex items-baseline gap-3 mb-8">
@@ -159,12 +129,8 @@ export default function Shelves({ loaderData }: Route.ComponentProps) {
 
                 {/* footer action */}
                 <div className="flex items-center justify-between text-xs pt-4 border-t border-border/50">
-                  <span className="micro-label group-hover:text-primary transition-colors">
-                    open log
-                  </span>
-                  <span className="text-primary font-mono group-hover:translate-x-1 transition-transform">
-                    →
-                  </span>
+                  <span className="micro-label group-hover:text-primary transition-colors">open log</span>
+                  <span className="text-primary font-mono group-hover:translate-x-1 transition-transform">→</span>
                 </div>
               </Link>
             );
@@ -176,9 +142,7 @@ export default function Shelves({ loaderData }: Route.ComponentProps) {
           <span>
             <span className="text-primary">◆</span> end_of_transmission
           </span>
-          <span>
-            ─── deep-space archives ────────────────────────────────────────
-          </span>
+          <span>─── deep-space archives ────────────────────────────────────────</span>
           <span>{formatCount(total)}/∞ stored</span>
         </footer>
       </main>
