@@ -8,7 +8,9 @@
       "Bash(mkdir -p /c/Users/Michael/.claude/skills)",
       "Bash(mkdir -p /c/Users/Michael/Desktop/Software_Development/Dev/Bookshelf/.claude/skills)",
       "Bash(mv /c/Users/Michael/.agents/skills/frontend-design /c/Users/Michael/.claude/skills/frontend-design)",
-      "Bash(mv /c/Users/Michael/Desktop/Software_Development/Dev/Bookshelf/.agents/skills/frontend-design /c/Users/Michael/Desktop/Software_Development/Dev/Bookshelf/.claude/skills/frontend-design)"
+      "Bash(mv /c/Users/Michael/Desktop/Software_Development/Dev/Bookshelf/.agents/skills/frontend-design /c/Users/Michael/Desktop/Software_Development/Dev/Bookshelf/.claude/skills/frontend-design)",
+      "Bash(npm run *)",
+      "Bash(docker compose *)"
     ]
   }
 }
