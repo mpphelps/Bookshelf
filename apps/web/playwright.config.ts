@@ -4,9 +4,9 @@ import { defineConfig, devices } from "@playwright/test";
  * Read environment variables from file.
  * https://github.com/motdotla/dotenv
  */
-// import dotenv from 'dotenv';
-// import path from 'path';
-// dotenv.config({ path: path.resolve(__dirname, '.env') });
+import dotenv from "dotenv";
+import path from "path";
+dotenv.config({ path: path.resolve(import.meta.dirname, ".env.test") });
 
 /**
  * See https://playwright.dev/docs/test-configuration.
@@ -26,7 +26,7 @@ export default defineConfig({
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     /* Base URL to use in actions like `await page.goto('')`. */
-    baseURL: "http://localhost:5173",
+    baseURL: "http://localhost:5174",
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: "on-first-retry",
@@ -72,11 +72,16 @@ export default defineConfig({
 
   /* Run your local dev server before starting the tests */
   webServer: {
-    command: "npm run dev",
-    url: "http://localhost:5173",
+    command: "npm run dev -- --port 5174",
+    url: "http://localhost:5174",
     reuseExistingServer: !process.env.CI,
     env: {
-      DATABASE_URL: "postgresql://bookshelf:bookshelf@localhost:5433/bookshelf_test",
+      DATABASE_URL: process.env.DATABASE_URL!,
+      SESSION_SECRET: process.env.SESSION_SECRET!,
+      AUTH0_CLIENT_ID: process.env.AUTH0_CLIENT_ID!,
+      AUTH0_CLIENT_SECRET: process.env.AUTH0_CLIENT_SECRET!,
+      AUTH0_CALLBACK_URL: process.env.AUTH0_CALLBACK_URL!,
+      AUTH0_AUDIENCE: process.env.AUTH0_AUDIENCE!,
     },
   },
 });
