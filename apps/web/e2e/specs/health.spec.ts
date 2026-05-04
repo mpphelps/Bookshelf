@@ -1,4 +1,4 @@
-import { test, expect } from "./test-fixtures";
+import { test, expect } from "../test-fixtures";
 
 test("health check returns ok status", async ({ page }) => {
   await page.goto("/health");

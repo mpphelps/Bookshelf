@@ -58,7 +58,10 @@ export function ShelfCard({
         </DisplayHeading>
 
         <div className="flex items-baseline gap-3 mb-8">
-          <span className="font-mono text-5xl md:text-6xl font-light text-primary tabular-nums leading-none">
+          <span
+            className="font-mono text-5xl md:text-6xl font-light text-primary tabular-nums leading-none"
+            aria-label={`${count} books`}
+          >
             {formatCount(count)}
           </span>
           <MicroLabel>vols</MicroLabel>

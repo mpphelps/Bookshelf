@@ -66,9 +66,11 @@ export default function Shelves({ loaderData }: Route.ComponentProps) {
             );
           })}
         </div>
-
-        <TransmissionFooter total={total} />
       </main>
+
+      <div className="mx-auto max-w-6xl px-6 pb-12">
+        <TransmissionFooter total={total} />
+      </div>
     </div>
   );
 }

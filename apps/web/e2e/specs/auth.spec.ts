@@ -1,4 +1,4 @@
-import { test, expect } from "./test-fixtures";
+import { test, expect } from "../test-fixtures";
 
 test.describe("authentication", () => {
   test.use({ user: { email: "test@example.com", name: "Test User" } });
