@@ -6,7 +6,8 @@ import { defineConfig, devices } from "@playwright/test";
  */
 import dotenv from "dotenv";
 import path from "path";
-dotenv.config({ path: path.resolve(import.meta.dirname, ".env.test") });
+dotenv.config({ path: path.resolve(import.meta.dirname, "../../packages/database/.env.test") });
+console.log("[playwright] E2E_AUTH_BYPASS =", JSON.stringify(process.env.E2E_AUTH_BYPASS));
 
 /**
  * See https://playwright.dev/docs/test-configuration.
@@ -21,7 +22,8 @@ export default defineConfig({
   /* Retry on CI only */
   retries: process.env.CI ? 2 : 0,
   /* Opt out of parallel tests on CI. */
-  workers: process.env.CI ? 1 : undefined,
+  //workers: process.env.CI ? 1 : undefined,
+  workers: 1,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   reporter: "html",
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
@@ -79,10 +81,7 @@ export default defineConfig({
     env: {
       DATABASE_URL: process.env.DATABASE_URL!,
       SESSION_SECRET: process.env.SESSION_SECRET!,
-      AUTH0_CLIENT_ID: process.env.AUTH0_CLIENT_ID!,
-      AUTH0_CLIENT_SECRET: process.env.AUTH0_CLIENT_SECRET!,
-      AUTH0_CALLBACK_URL: process.env.AUTH0_CALLBACK_URL!,
-      AUTH0_AUDIENCE: process.env.AUTH0_AUDIENCE!,
+      E2E_AUTH_BYPASS: process.env.E2E_AUTH_BYPASS!,
     },
   },
 });

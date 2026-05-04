@@ -1,5 +1,5 @@
 import { exchangeCodeForTokens, verifyAccessToken } from "../lib/auth0.server";
-import { getSessionToken } from "../lib/session.server";
+import { getSessionToken, getTestSessionEmail } from "../lib/session.server";
 import { userRepository } from "../repositories/user.repository";
 
 export type AuthUser = {
@@ -41,6 +41,19 @@ export async function handleCallback(code: string): Promise<{
 }
 
 export async function getAuthenticatedUser(request: Request): Promise<AuthUser | null> {
+  if (process.env.E2E_AUTH_BYPASS === "1") {
+    const email = await getTestSessionEmail(request);
+    if (!email) return null;
+    const user = await userRepository.findByEmail(email);
+    if (!user) return null;
+    return {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      permissions: ["read:books", "write:books", "read:notes", "write:notes"],
+    };
+  }
+
   const token = await getSessionToken(request);
   if (!token) return null;
 

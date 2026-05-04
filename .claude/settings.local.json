@@ -10,7 +10,8 @@
       "Bash(mv /c/Users/Michael/.agents/skills/frontend-design /c/Users/Michael/.claude/skills/frontend-design)",
       "Bash(mv /c/Users/Michael/Desktop/Software_Development/Dev/Bookshelf/.agents/skills/frontend-design /c/Users/Michael/Desktop/Software_Development/Dev/Bookshelf/.claude/skills/frontend-design)",
       "Bash(npm run *)",
-      "Bash(docker compose *)"
+      "Bash(docker compose *)",
+      "PowerShell(Get-NetTCPConnection *)"
     ]
   }
 }

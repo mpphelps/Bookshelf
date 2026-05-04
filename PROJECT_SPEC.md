@@ -231,13 +231,15 @@ Subsequent requests → loader reads cookie → validates JWT → extracts user 
 - [x] Run first migration
 - [x] Verify: app starts, connects to DB (health check route)
 
-### Phase 1b: Testing & Auth Setup
-- [ ] Set up Playwright with dedicated test database
-- [ ] Set up Auth0 tenant and configure OAuth 2.0
-- [ ] Implement auth routes (login, callback, logout)
-- [ ] JWT session cookie middleware
-- [ ] User sync on first login (Auth0 → local DB)
-- [ ] Authorization middleware (role/permission checks)
+### Phase 1b: Testing & Auth Setup ✅
+- [x] Set up Playwright with dedicated test database
+- [x] Set up Auth0 tenant and configure OAuth 2.0
+- [x] Implement auth routes (login, callback, logout)
+- [x] JWT session cookie middleware
+- [x] User sync on first login (Auth0 → local DB)
+- [x] Authorization middleware (role/permission checks) — `requirePermission()` in `services/auth.service.ts`
+- [x] Test-only auth bypass — env-gated `/auth/test-login` route + `getAuthenticatedUser` bypass branch
+- [x] Test DB infrastructure — `globalSetup` migrates, `cleanDb` fixture truncates per test, port 5174 isolated from dev
 
 ### Phase 2: Core CRUD Features
 - [ ] Shelves dashboard page
@@ -276,6 +278,6 @@ Subsequent requests → loader reads cookie → validates JWT → extracts user 
 - React Router: 7.13.2
 - Prisma: 7.6.0
 - PostgreSQL: 17 (Docker)
-- Auth0: TBD
-- Vitest: TBD
-- Playwright: TBD
+- Auth0: jsonwebtoken ^9.0.3 + jwks-rsa ^4.0.1
+- Vitest: TBD (Phase 3)
+- Playwright: ^1.59.1

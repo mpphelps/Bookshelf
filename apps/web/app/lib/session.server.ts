@@ -21,6 +21,18 @@ export async function createSessionHeaders(token: string): Promise<Headers> {
   return headers;
 }
 
+export async function getTestSessionEmail(request: Request): Promise<string | null> {
+  const cookieHeader = request.headers.get("Cookie");
+  const session = await sessionCookie.parse(cookieHeader);
+  return session?.email || null;
+}
+
+export async function createTestSessionHeaders(email: string): Promise<Headers> {
+  const headers = new Headers();
+  headers.append("Set-Cookie", await sessionCookie.serialize({ email }));
+  return headers;
+}
+
 export async function destroySessionHeaders(): Promise<Headers> {
   const headers = new Headers();
   headers.append("Set-Cookie", await sessionCookie.serialize(null, { maxAge: 0 }));

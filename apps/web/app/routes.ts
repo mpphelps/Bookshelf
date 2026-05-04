@@ -6,4 +6,5 @@ export default [
   route("auth/login", "routes/auth.login.ts"),
   route("auth/callback", "routes/auth.callback.ts"),
   route("auth/logout", "routes/auth.logout.ts"),
+  route("auth/test-login", "routes/auth.test-login.ts"),
 ] satisfies RouteConfig;
