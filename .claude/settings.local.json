@@ -11,7 +11,13 @@
       "Bash(mv /c/Users/Michael/Desktop/Software_Development/Dev/Bookshelf/.agents/skills/frontend-design /c/Users/Michael/Desktop/Software_Development/Dev/Bookshelf/.claude/skills/frontend-design)",
       "Bash(npm run *)",
       "Bash(docker compose *)",
-      "PowerShell(Get-NetTCPConnection *)"
+      "PowerShell(Get-NetTCPConnection *)",
+      "Bash(grep -o \"text-primary\\\\|text-accent\\\\|text-muted-foreground\\\\|bg-card\\\\\\\\\\\\/60\\\\|status-dot\" apps/web/build/client/assets/root-rX-Eka8a.css)",
+      "Bash(grep -E \"text-accent|bg-card|hover:shadow|hover\\\\\\\\\\\\\\\\:shadow|hover\\\\\\\\\\\\\\\\:bg-card|hover\\\\\\\\\\\\\\\\:border-primary|border-border\" apps/web/build/client/assets/root-rX-Eka8a.css)",
+      "Bash(grep -oE \"text-accent|bg-card\\\\\\\\\\\\\\\\/60|hover\\\\\\\\\\\\\\\\:bg-card|hover\\\\\\\\\\\\\\\\:border-primary\\\\\\\\\\\\\\\\/50|hover\\\\\\\\\\\\\\\\:shadow|gap-3|\\\\\\\\.p-6\" apps/web/build/client/assets/root-VqoXik-0.css)",
+      "Bash(grep -oE \"hover\\\\\\\\\\\\\\\\:[a-zA-Z_/\\\\[\\\\]\\\\\\\\\\\\\\\\\\\\.0-9-]+\" apps/web/build/client/assets/root-VqoXik-0.css)",
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\Michael\\\\Desktop\\\\Software_Development\\\\Dev\\\\Bookshelf\" -Directory)",
+      "Bash(Select-Object Name)"
     ]
   }
 }
