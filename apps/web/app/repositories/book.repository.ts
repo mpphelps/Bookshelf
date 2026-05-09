@@ -11,7 +11,7 @@ export const bookRepository = {
     return counts;
   },
 
-  async findByUserAndShelf(userId: string, shelf: Shelf) {
+  async findByShelf(userId: string, shelf: Shelf) {
     return prisma.book.findMany({
       where: { userId, shelf },
       orderBy: { updatedAt: "desc" },

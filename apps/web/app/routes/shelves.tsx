@@ -5,10 +5,7 @@ import { BracketDivider } from "@bookshelf/ui/components/bracket-divider";
 
 import { SystemHeader } from "../components/layout/system-header";
 import { TransmissionFooter } from "../components/layout/transmission-footer";
-import {
-  ShelfCard,
-  type ShelfStatusTone,
-} from "../components/shelves/shelf-card";
+import { ShelfCard, type ShelfStatusTone } from "../components/shelves/shelf-card";
 import { TelemetryHeader } from "../components/shelves/telemetry-header";
 import { getAuthenticatedUser } from "../services/auth.service";
 import { getShelvesOverview } from "../services/book.service";
@@ -23,10 +20,7 @@ export async function loader({ request }: Route.LoaderArgs) {
   return { user, shelves };
 }
 
-const SHELF_STATUS: Record<
-  string,
-  { label: string; tone: ShelfStatusTone; pulsing: boolean }
-> = {
+const SHELF_STATUS: Record<string, { label: string; tone: ShelfStatusTone; pulsing: boolean }> = {
   WANT_TO_READ: { label: "QUEUED", tone: "muted", pulsing: false },
   READING: { label: "ACTIVE", tone: "primary", pulsing: true },
   FINISHED: { label: "ARCHIVED", tone: "accent", pulsing: false },
@@ -43,11 +37,7 @@ export default function Shelves({ loaderData }: Route.ComponentProps) {
       <main className="mx-auto max-w-6xl px-6 py-12">
         <TelemetryHeader userName={user.name} total={total} />
 
-        <BracketDivider
-          className="mb-10"
-          label="shelves"
-          trailing={`${shelves.length} categories`}
-        />
+        <BracketDivider className="mb-10" label="shelves" trailing={`${shelves.length} categories`} />
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {shelves.map((shelf, idx) => {
@@ -55,7 +45,7 @@ export default function Shelves({ loaderData }: Route.ComponentProps) {
             return (
               <ShelfCard
                 key={shelf.key}
-                to={`/${shelf.key}`}
+                to={`/shelves/${shelf.key}`}
                 slotIndex={idx + 1}
                 shelfLabel={shelf.label}
                 count={shelf.count}

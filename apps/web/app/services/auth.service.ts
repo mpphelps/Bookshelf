@@ -1,3 +1,4 @@
+import { ForbiddenError } from "~/lib/errors";
 import { exchangeCodeForTokens, verifyAccessToken } from "../lib/auth0.server";
 import { getSessionToken, getTestSessionEmail } from "../lib/session.server";
 import { userRepository } from "../repositories/user.repository";
@@ -78,6 +79,6 @@ export async function getAuthenticatedUser(request: Request): Promise<AuthUser |
 
 export function requirePermission(user: AuthUser, permission: string): void {
   if (!user.permissions.includes(permission)) {
-    throw new Response("Forbidden", { status: 403 });
+    throw new ForbiddenError(`User does not have permission: ${permission}`);
   }
 }

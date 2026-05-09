@@ -1,3 +1,4 @@
+import { ValidationError } from "~/lib/errors";
 import { bookRepository } from "../repositories/book.repository";
 import type { AuthUser } from "./auth.service";
 
@@ -7,7 +8,7 @@ const SHELF_LABELS = {
   FINISHED: "Finished",
 } as const;
 
-type ShelfKey = keyof typeof SHELF_LABELS;
+export type ShelfKey = keyof typeof SHELF_LABELS;
 
 export async function getShelvesOverview(user: AuthUser) {
   const counts = await bookRepository.countByShelf(user.id);
@@ -20,4 +21,13 @@ export async function getShelvesOverview(user: AuthUser) {
   );
 
   return shelves;
+}
+
+export async function getBooksOnShelf(user: AuthUser, shelf: string) {
+  if (SHELF_LABELS[shelf as ShelfKey] === undefined) {
+    throw new ValidationError("Invalid shelf key");
+  }
+
+  const books = await bookRepository.findByShelf(user.id, shelf as ShelfKey);
+  return books;
 }
