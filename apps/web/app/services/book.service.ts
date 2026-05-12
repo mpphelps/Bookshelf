@@ -1,4 +1,4 @@
-import { ValidationError } from "~/lib/errors";
+import { ShelfNotFoundError, ValidationError } from "~/lib/errors";
 import { bookRepository } from "../repositories/book.repository";
 import type { AuthUser } from "./auth.service";
 
@@ -25,7 +25,7 @@ export async function getShelvesOverview(user: AuthUser) {
 
 export async function getBooksOnShelf(user: AuthUser, shelf: string) {
   if (SHELF_LABELS[shelf as ShelfKey] === undefined) {
-    throw new ValidationError("Invalid shelf key");
+    throw new ShelfNotFoundError("Invalid shelf key");
   }
 
   const books = await bookRepository.findByShelf(user.id, shelf as ShelfKey);

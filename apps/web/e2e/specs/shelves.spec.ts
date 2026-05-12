@@ -1,19 +1,7 @@
 import { prisma } from "@bookshelf/database";
 import { ShelvesPage } from "../page-object-models/shelves-page";
 import { test } from "../test-fixtures";
-
-async function seedBooksForUser(userId: string) {
-  await prisma.book.createMany({
-    data: [
-      { title: "Book 1", author: "Author 1", userId, shelf: "WANT_TO_READ" },
-      { title: "Book 2", author: "Author 2", userId, shelf: "WANT_TO_READ" },
-      { title: "Book 3", author: "Author 2", userId, shelf: "WANT_TO_READ" },
-      { title: "Book 4", author: "Author 2", userId, shelf: "READING" },
-      { title: "Book 5", author: "Author 2", userId, shelf: "READING" },
-      { title: "Book 6", author: "Author 2", userId, shelf: "FINISHED" },
-    ],
-  });
-}
+import { seedBooksForUser } from "../utilities/utilities";
 
 test.describe("shelves page", () => {
   test.use({ user: { email: "test@example.com", name: "Test User" } });

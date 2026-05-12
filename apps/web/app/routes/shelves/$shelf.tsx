@@ -1,8 +1,8 @@
-import { redirect } from "react-router";
+import { isRouteErrorResponse, redirect } from "react-router";
 import { getAuthenticatedUser } from "~/services/auth.service";
 import { getBooksOnShelf } from "~/services/book.service";
 import type { Route } from "./+types/$shelf";
-import { ValidationError } from "~/lib/errors";
+import { ShelfNotFoundError } from "~/lib/errors";
 
 export async function loader({ request, params }: Route.LoaderArgs) {
   const user = await getAuthenticatedUser(request);
@@ -16,11 +16,26 @@ export async function loader({ request, params }: Route.LoaderArgs) {
     const books = await getBooksOnShelf(user, shelfKey);
     return { user, books, shelfKey };
   } catch (error) {
-    if (error instanceof ValidationError) {
+    if (error instanceof ShelfNotFoundError) {
       throw new Response(error.message, { status: error.status });
     }
     throw error; // unknown errors propagate to RR7's error boundary
   }
+}
+
+export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
+  if (isRouteErrorResponse(error)) {
+    return (
+      <div role="alert">
+        <h1>Error</h1>
+        <p>
+          {error.status} {error.data}
+        </p>
+      </div>
+    );
+  }
+
+  throw error; // unknown errors propagate to RR7's root error boundary
 }
 
 export default function ShelfRoute({ loaderData }: Route.ComponentProps) {
@@ -31,7 +46,9 @@ export default function ShelfRoute({ loaderData }: Route.ComponentProps) {
       <p>Shelf: {shelfKey}</p>
       <ul>
         {books.map((book) => (
-          <li key={book.id}>{book.title}</li>
+          <li key={book.id} aria-label="book-title">
+            {book.title}
+          </li>
         ))}
       </ul>
     </div>

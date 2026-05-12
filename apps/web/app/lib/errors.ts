@@ -6,6 +6,14 @@ export class BookNotFoundError extends Error {
   }
 }
 
+export class ShelfNotFoundError extends Error {
+  readonly status = 404;
+  constructor(shelfKey: string) {
+    super(`Shelf '${shelfKey}' not found`);
+    this.name = "ShelfNotFoundError";
+  }
+}
+
 export class ForbiddenError extends Error {
   readonly status = 403;
   constructor(message: string = "Forbidden") {
