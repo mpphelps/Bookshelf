@@ -17,4 +17,10 @@ export const bookRepository = {
       orderBy: { updatedAt: "desc" },
     });
   },
+
+  async create(data: { userId: string; title: string; author: string; shelf: Shelf }) {
+    return prisma.book.create({
+      data,
+    });
+  },
 };

@@ -24,8 +24,10 @@ export class ForbiddenError extends Error {
 
 export class ValidationError extends Error {
   readonly status = 422;
-  constructor(message: string) {
-    super(message);
+  readonly fields: Record<string, string>;
+  constructor(fields: Record<string, string>) {
+    super("Validation failed");
     this.name = "ValidationError";
+    this.fields = fields;
   }
 }

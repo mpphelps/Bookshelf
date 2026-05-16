@@ -25,9 +25,37 @@ export async function getShelvesOverview(user: AuthUser) {
 
 export async function getBooksOnShelf(user: AuthUser, shelf: string) {
   if (SHELF_LABELS[shelf as ShelfKey] === undefined) {
-    throw new ShelfNotFoundError("Invalid shelf key");
+    throw new ShelfNotFoundError(shelf);
   }
 
   const books = await bookRepository.findByShelf(user.id, shelf as ShelfKey);
   return books;
+}
+
+export async function createBook(user: AuthUser, input: { title: string; author: string; shelf: string }) {
+  const errors: Record<string, string> = {};
+
+  const title = input.title.trim();
+  const author = input.author.trim();
+
+  if (title.length === 0) {
+    errors.title = "Title is required";
+  }
+  if (author.length === 0) {
+    errors.author = "Author is required";
+  }
+  if (SHELF_LABELS[input.shelf as ShelfKey] === undefined) {
+    errors.shelf = "Invalid shelf";
+  }
+
+  if (Object.keys(errors).length > 0) {
+    throw new ValidationError(errors);
+  }
+
+  return bookRepository.create({
+    userId: user.id,
+    title,
+    author,
+    shelf: input.shelf as ShelfKey,
+  });
 }

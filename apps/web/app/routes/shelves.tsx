@@ -9,6 +9,8 @@ import { ShelfCard, type ShelfStatusTone } from "../components/shelves/shelf-car
 import { TelemetryHeader } from "../components/shelves/telemetry-header";
 import { getAuthenticatedUser } from "../services/auth.service";
 import { getShelvesOverview } from "../services/book.service";
+import { Link } from "react-router";
+import { Button } from "@bookshelf/ui/components/button";
 
 export async function loader({ request }: Route.LoaderArgs) {
   const user = await getAuthenticatedUser(request);
@@ -37,7 +39,16 @@ export default function Shelves({ loaderData }: Route.ComponentProps) {
       <main className="mx-auto max-w-6xl px-6 py-12">
         <TelemetryHeader userName={user.name} total={total} />
 
-        <BracketDivider className="mb-10" label="shelves" trailing={`${shelves.length} categories`} />
+        {/* <BracketDivider className="mb-10" label="shelves" trailing={`${shelves.length} categories`} /> */}
+
+        <div className="mb-10 flex items-center justify-between gap-4">
+          <BracketDivider className="flex-1" label="shelves" trailing={`${shelves.length} categories`} />
+          <Button variant="outline" size="sm" asChild>
+            <Link to="/books/new" className="display !text-[10px]">
+              + NEW ENTRY
+            </Link>
+          </Button>
+        </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {shelves.map((shelf, idx) => {
