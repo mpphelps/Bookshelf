@@ -1,7 +1,7 @@
 import { ForbiddenError } from "~/lib/errors";
 import { exchangeCodeForTokens, verifyAccessToken } from "../lib/auth0.server";
 import { getSessionToken, getTestSessionEmail } from "../lib/session.server";
-import { userRepository } from "../repositories/user.repository";
+import { userRepository } from "../repositories/user.repository.server";
 
 export type AuthUser = {
   id: string;

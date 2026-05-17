@@ -1,6 +1,6 @@
-import { isRouteErrorResponse, redirect } from "react-router";
-import { getAuthenticatedUser } from "~/services/auth.service";
-import { getBooksOnShelf } from "~/services/book.service";
+import { isRouteErrorResponse, Link, redirect } from "react-router";
+import { getAuthenticatedUser } from "~/services/auth.service.server";
+import { getBooksOnShelf } from "~/services/book.service.server";
 import type { Route } from "./+types/$shelf";
 import { ShelfNotFoundError } from "~/lib/errors";
 
@@ -47,7 +47,7 @@ export default function ShelfRoute({ loaderData }: Route.ComponentProps) {
       <ul>
         {books.map((book) => (
           <li key={book.id} aria-label="book-title">
-            {book.title}
+            <Link to={`/books/${book.id}`}>{book.title}</Link>
           </li>
         ))}
       </ul>

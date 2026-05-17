@@ -1,5 +1,5 @@
 import type { Route } from "./+types/auth.test-login";
-import { userRepository } from "../repositories/user.repository";
+import { userRepository } from "../repositories/user.repository.server";
 import { createTestSessionHeaders } from "../lib/session.server";
 
 export async function action({ request }: Route.ActionArgs) {

@@ -1,8 +1,8 @@
 import { Form, redirect } from "react-router";
-import { getAuthenticatedUser } from "~/services/auth.service";
+import { getAuthenticatedUser } from "~/services/auth.service.server";
 import { Input } from "@bookshelf/ui/components/input";
 import { Button } from "@bookshelf/ui/components/button";
-import { createBook } from "~/services/book.service";
+import { createBook } from "~/services/book.service.server";
 import { ValidationError } from "~/lib/errors";
 import type { Route } from "./+types/new";
 

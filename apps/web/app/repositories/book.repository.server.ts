@@ -18,6 +18,12 @@ export const bookRepository = {
     });
   },
 
+  async findById(bookId: string) {
+    return prisma.book.findUnique({
+      where: { id: bookId },
+    });
+  },
+
   async create(data: { userId: string; title: string; author: string; shelf: Shelf }) {
     return prisma.book.create({
       data,

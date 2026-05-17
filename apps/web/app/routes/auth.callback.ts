@@ -1,6 +1,6 @@
 import { redirect } from "react-router";
 import type { Route } from "./+types/auth.callback";
-import { handleCallback } from "../services/auth.service";
+import { handleCallback } from "../services/auth.service.server";
 import { createSessionHeaders } from "../lib/session.server";
 
 export async function loader({ request }: Route.LoaderArgs) {

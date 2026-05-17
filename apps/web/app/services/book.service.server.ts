@@ -1,14 +1,7 @@
-import { ShelfNotFoundError, ValidationError } from "~/lib/errors";
-import { bookRepository } from "../repositories/book.repository";
-import type { AuthUser } from "./auth.service";
-
-const SHELF_LABELS = {
-  WANT_TO_READ: "Want to Read",
-  READING: "Reading",
-  FINISHED: "Finished",
-} as const;
-
-export type ShelfKey = keyof typeof SHELF_LABELS;
+import { BookNotFoundError, ForbiddenError, ShelfNotFoundError, ValidationError } from "~/lib/errors";
+import { bookRepository } from "../repositories/book.repository.server";
+import type { AuthUser } from "./auth.service.server";
+import { SHELF_LABELS, type ShelfKey } from "~/lib/shelves";
 
 export async function getShelvesOverview(user: AuthUser) {
   const counts = await bookRepository.countByShelf(user.id);
@@ -30,6 +23,20 @@ export async function getBooksOnShelf(user: AuthUser, shelf: string) {
 
   const books = await bookRepository.findByShelf(user.id, shelf as ShelfKey);
   return books;
+}
+
+export async function getBookForUser(user: AuthUser, bookId: string) {
+  const book = await bookRepository.findById(bookId);
+
+  if (!book) {
+    throw new BookNotFoundError(bookId);
+  }
+
+  if (book.userId !== user.id) {
+    throw new ForbiddenError("You do not have access to this book");
+  }
+
+  return book;
 }
 
 export async function createBook(user: AuthUser, input: { title: string; author: string; shelf: string }) {

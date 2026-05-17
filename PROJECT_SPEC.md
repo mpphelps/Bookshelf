@@ -46,6 +46,7 @@ bookshelf/
 ## 3. Backend Architecture (Layered)
 
 ### 3a. Route Layer (Remix loaders & actions)
+
 - **Responsibility:** Parse request params/form data, call the appropriate service, return Response/json.
 - **Rules:**
   - No business logic.
@@ -53,6 +54,7 @@ bookshelf/
   - Handles HTTP-level concerns only (status codes, redirects, headers).
 
 ### 3b. Service Layer (`app/services/`)
+
 - **Responsibility:** Business logic, validation, orchestration.
 - **Rules:**
   - Receives plain data (not Request objects).
@@ -61,6 +63,7 @@ bookshelf/
   - This is where rules like "you can only rate a book on the Finished shelf" live.
 
 ### 3c. Repository Layer (`app/repositories/`)
+
 - **Responsibility:** Data access only — Prisma queries.
 - **Rules:**
   - One repository per domain entity (BookRepository, NoteRepository, etc.).
@@ -69,6 +72,7 @@ bookshelf/
   - Never throws business errors — only data errors.
 
 ### Example flow for "Move a book to the Finished shelf":
+
 ```
 Route action (parses formData: bookId, shelf)
   → bookService.moveToShelf(bookId, shelf)
@@ -82,6 +86,7 @@ Route action (parses formData: bookId, shelf)
 ## 4. Data Model (Prisma)
 
 ### Phase 1 — Initial Schema
+
 ```
 User
   - id          String   @id @default(cuid())
@@ -122,15 +127,16 @@ enum Shelf {
 
 Each exercise teaches a different migration skill:
 
-| # | Change | Skill Learned |
-|---|--------|---------------|
-| M1 | Add `coverImageUrl` (optional) column to Book | Safe column addition — nullable columns don't break existing rows |
-| M2 | Add `genre` column (required) with backfill | Adding a required column to a table with existing data — must provide a default or backfill |
-| M3 | Split `author` string into a separate `Author` table with relation | Structural migration — create table, backfill from existing data, update references, drop old column (expand/contract pattern) |
-| M4 | Add `startedAt` and `finishedAt` timestamps to Book, backfill from `updatedAt` | Data migration — writing a migration script that transforms existing data |
-| M5 | Rename `content` to `body` on Note | Column rename — Prisma handles this as drop+create by default, learn to override with raw SQL rename |
+| #   | Change                                                                         | Skill Learned                                                                                                                  |
+| --- | ------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------ |
+| M1  | Add `coverImageUrl` (optional) column to Book                                  | Safe column addition — nullable columns don't break existing rows                                                              |
+| M2  | Add `genre` column (required) with backfill                                    | Adding a required column to a table with existing data — must provide a default or backfill                                    |
+| M3  | Split `author` string into a separate `Author` table with relation             | Structural migration — create table, backfill from existing data, update references, drop old column (expand/contract pattern) |
+| M4  | Add `startedAt` and `finishedAt` timestamps to Book, backfill from `updatedAt` | Data migration — writing a migration script that transforms existing data                                                      |
+| M5  | Rename `content` to `body` on Note                                             | Column rename — Prisma handles this as drop+create by default, learn to override with raw SQL rename                           |
 
 **Teaching approach for each migration:**
+
 1. Explain what the change is and why it's tricky
 2. Show what Prisma generates by default (`prisma migrate dev --create-only`)
 3. Inspect the generated SQL together
@@ -145,20 +151,21 @@ Each exercise teaches a different migration skill:
 
 ### Pages
 
-| Route | Description | Remix Concepts |
-|-------|-------------|----------------|
-| `/` | Landing / redirect to `/shelves` | Root loader |
-| `/auth/login` | Redirects to Auth0 login | OAuth 2.0 redirect |
-| `/auth/callback` | Auth0 callback — validates tokens, creates session | OAuth callback, session cookies |
-| `/auth/logout` | Clears session, redirects to Auth0 logout | Session destruction |
-| `/shelves` | Dashboard showing all 3 shelves with book counts | Loader with DB query |
-| `/shelves/$shelf` | Filtered view of one shelf | Dynamic route params, loader |
-| `/books/new` | Add a book form | Action, form validation, redirect |
-| `/books/$bookId` | Book detail — see notes, rating, change shelf | Nested loader, multiple actions |
-| `/books/$bookId/notes` | Notes list for a book | Nested route, outlet |
-| `/books/$bookId/notes/new` | Add a note | Action, form |
+| Route                      | Description                                        | Remix Concepts                    |
+| -------------------------- | -------------------------------------------------- | --------------------------------- |
+| `/`                        | Landing / redirect to `/shelves`                   | Root loader                       |
+| `/auth/login`              | Redirects to Auth0 login                           | OAuth 2.0 redirect                |
+| `/auth/callback`           | Auth0 callback — validates tokens, creates session | OAuth callback, session cookies   |
+| `/auth/logout`             | Clears session, redirects to Auth0 logout          | Session destruction               |
+| `/shelves`                 | Dashboard showing all 3 shelves with book counts   | Loader with DB query              |
+| `/shelves/$shelf`          | Filtered view of one shelf                         | Dynamic route params, loader      |
+| `/books/new`               | Add a book form                                    | Action, form validation, redirect |
+| `/books/$bookId`           | Book detail — see notes, rating, change shelf      | Nested loader, multiple actions   |
+| `/books/$bookId/notes`     | Notes list for a book                              | Nested route, outlet              |
+| `/books/$bookId/notes/new` | Add a note                                         | Action, form                      |
 
 ### Key Remix Concepts Covered
+
 - Loaders (server-side data fetching)
 - Actions (form mutations)
 - Nested routing & Outlets
@@ -173,6 +180,7 @@ Each exercise teaches a different migration skill:
 ## 6. Authentication & Authorization
 
 ### Authentication (Auth0 + OAuth 2.0)
+
 - Auth0 handles login/signup UI, password storage, social login
 - OAuth 2.0 Authorization Code flow with PKCE
 - On successful login, Auth0 returns a JWT (id_token + access_token)
@@ -181,12 +189,14 @@ Each exercise teaches a different migration skill:
 - On first login, a User record is created in our DB (synced from Auth0 profile)
 
 ### Authorization (JWT-based)
+
 - Each request: server reads JWT from session cookie, validates signature against Auth0 JWKS
 - Permissions embedded in JWT claims (configured in Auth0 dashboard)
 - Roles: `admin` (full access), `user` (read/write own data)
 - Authorization checks happen in the service layer, not routes
 
 ### Auth Flow
+
 ```
 Browser → /auth/login → redirect to Auth0
 Auth0 → user logs in → redirect to /auth/callback
@@ -199,16 +209,19 @@ Subsequent requests → loader reads cookie → validates JWT → extracts user 
 ## 7. Testing Strategy
 
 ### Vitest — Unit Tests (`tests/unit/`)
+
 - Service layer functions (business logic)
 - Utility/helper functions
 - Mock the repository layer using vi.mock
 
 ### Vitest — Integration Tests (`tests/integration/`)
+
 - Repository functions against a real test database
 - Loader/action functions with real DB
 - Use a test database + migrate before suite, truncate between tests
 
 ### Playwright — E2E Tests (`e2e/`)
+
 - Separate `e2e` folder at the `apps/web` level
 - Runs against a dedicated `bookshelf_test` database (not dev or prod)
 - Separate Docker service or same Postgres instance with a different DB name
@@ -224,6 +237,7 @@ Subsequent requests → loader reads cookie → validates JWT → extracts user 
 ## 8. Build Phases (Learning Progression)
 
 ### Phase 1: Scaffold & Setup ✅
+
 - [x] Initialize Turborepo monorepo
 - [x] Create `packages/database` with Prisma + initial schema
 - [x] Create `apps/web` React Router v7 app
@@ -232,16 +246,18 @@ Subsequent requests → loader reads cookie → validates JWT → extracts user 
 - [x] Verify: app starts, connects to DB (health check route)
 
 ### Phase 1b: Testing & Auth Setup ✅
+
 - [x] Set up Playwright with dedicated test database
 - [x] Set up Auth0 tenant and configure OAuth 2.0
 - [x] Implement auth routes (login, callback, logout)
 - [x] JWT session cookie middleware
 - [x] User sync on first login (Auth0 → local DB)
-- [x] Authorization middleware (role/permission checks) — `requirePermission()` in `services/auth.service.ts`
+- [x] Authorization middleware (role/permission checks) — `requirePermission()` in `services/auth.service.server.ts`
 - [x] Test-only auth bypass — env-gated `/auth/test-login` route + `getAuthenticatedUser` bypass branch
 - [x] Test DB infrastructure — `globalSetup` migrates, `cleanDb` fixture truncates per test, port 5174 isolated from dev
 
 ### Phase 2: Core CRUD Features
+
 - [ ] Shelves dashboard page
 - [ ] Add book form + action
 - [ ] Book detail page with shelf management
@@ -251,11 +267,13 @@ Subsequent requests → loader reads cookie → validates JWT → extracts user 
 - All built with the 3-layer architecture (route → service → repo)
 
 ### Phase 3: Unit & Integration Testing
+
 - [ ] Set up Vitest config
 - [ ] Write unit tests for service layer
 - [ ] Write integration tests for repositories
 
 ### Phase 4: Migration Exercises
+
 - [ ] M1: Add optional column
 - [ ] M2: Add required column with backfill
 - [ ] M3: Extract entity to new table (expand/contract)
@@ -263,6 +281,7 @@ Subsequent requests → loader reads cookie → validates JWT → extracts user 
 - [ ] M5: Column rename without data loss
 
 ### Phase 5: Polish & Advanced
+
 - [ ] Error boundaries
 - [ ] Optimistic UI with useNavigation
 - [ ] Turbo pipeline configuration (build/test/lint)

@@ -7,8 +7,8 @@ import { SystemHeader } from "../components/layout/system-header";
 import { TransmissionFooter } from "../components/layout/transmission-footer";
 import { ShelfCard, type ShelfStatusTone } from "../components/shelves/shelf-card";
 import { TelemetryHeader } from "../components/shelves/telemetry-header";
-import { getAuthenticatedUser } from "../services/auth.service";
-import { getShelvesOverview } from "../services/book.service";
+import { getAuthenticatedUser } from "../services/auth.service.server";
+import { getShelvesOverview } from "../services/book.service.server";
 import { Link } from "react-router";
 import { Button } from "@bookshelf/ui/components/button";
 
