@@ -266,6 +266,17 @@ Subsequent requests → loader reads cookie → validates JWT → extracts user 
 - [x] E2E tests for each feature as it's built
 - All built with the 3-layer architecture (route → service → repo)
 
+### Phase 2b: CRUD Completion
+
+Round out update/delete patterns missed in initial Phase 2. Ship before Phase 4.
+
+- [ ] Delete book (cascade-deletes notes — verify `Note.book` has `onDelete: Cascade`)
+- [ ] Edit note (modal sub-route `/books/:bookId/notes/:noteId/edit`)
+- [ ] Delete note (inline action on `LogEntry`)
+- [ ] E2E coverage including negative ownership tests for all three
+
+Note service introduces a `getNoteForUser` helper (Note → Book → User) so update/delete share one ownership gate.
+
 ### Phase 3: Unit & Integration Testing (deferred)
 
 E2E coverage from Phase 2 considered sufficient — service/repo layers are exercised end-to-end through the route layer. Revisit if specific business logic grows complex enough to warrant isolated unit testing.
@@ -276,18 +287,26 @@ E2E coverage from Phase 2 considered sufficient — service/repo layers are exer
 
 ### Phase 4: Migration Exercises
 
-- [ ] M1: Add optional column
-- [ ] M2: Add required column with backfill
-- [ ] M3: Extract entity to new table (expand/contract)
-- [ ] M4: Data backfill migration
-- [ ] M5: Column rename without data loss
+Pattern matters; suggested payloads chosen to unlock Phase 6 features.
+
+- [ ] M1: Add optional column — suggested `Book.genre String?` (unlocks 6.2)
+- [ ] M2: Add required column with backfill — suggested `Book.priority Int` per-shelf (unlocks 6.3)
+- [ ] M3: Extract entity to new table (expand/contract) — suggested: `Book.rating` → `Rating` model
+- [ ] M4: Data backfill — suggested: normalize `Book.author` casing
+- [ ] M5: Column rename without data loss — suggested: `Note.content` → `Note.body`
 
 ### Phase 5: Polish & Advanced
 
-- [ ] Error boundaries
-- [ ] Optimistic UI with useNavigation
+- [ ] Error boundaries (root-level, not just per-route)
+- [ ] Optimistic UI with useNavigation / useFetcher pending states
 - [ ] Turbo pipeline configuration (build/test/lint)
 - [ ] CI-ready scripts
+
+### Phase 6: Feature Enhancements
+
+- [ ] 6.1: Open Library API — search-first add-book modal (auto-fill title/author/cover from `openlibrary.org/search.json`); manual entry remains as fallback. Independent of Phase 4.
+- [ ] 6.2: Sort books on a shelf — URL state `?sort=title|author|genre|recent`; genre option requires Phase 4 M1.
+- [ ] 6.3: Drag-and-drop priority reordering within a shelf via `@dnd-kit/sortable`; requires Phase 4 M2 (`Book.priority`).
 
 ---
 
