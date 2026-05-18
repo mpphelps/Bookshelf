@@ -256,17 +256,19 @@ Subsequent requests → loader reads cookie → validates JWT → extracts user 
 - [x] Test-only auth bypass — env-gated `/auth/test-login` route + `getAuthenticatedUser` bypass branch
 - [x] Test DB infrastructure — `globalSetup` migrates, `cleanDb` fixture truncates per test, port 5174 isolated from dev
 
-### Phase 2: Core CRUD Features
+### Phase 2: Core CRUD Features ✅
 
-- [ ] Shelves dashboard page
-- [ ] Add book form + action
-- [ ] Book detail page with shelf management
-- [ ] Notes CRUD on book detail
-- [ ] Rating on finished books
-- [ ] E2E tests for each feature as it's built
+- [x] Shelves dashboard page
+- [x] Add book form + action
+- [x] Book detail page with shelf management
+- [x] Notes CRUD on book detail
+- [x] Rating on finished books
+- [x] E2E tests for each feature as it's built
 - All built with the 3-layer architecture (route → service → repo)
 
-### Phase 3: Unit & Integration Testing
+### Phase 3: Unit & Integration Testing (deferred)
+
+E2E coverage from Phase 2 considered sufficient — service/repo layers are exercised end-to-end through the route layer. Revisit if specific business logic grows complex enough to warrant isolated unit testing.
 
 - [ ] Set up Vitest config
 - [ ] Write unit tests for service layer
