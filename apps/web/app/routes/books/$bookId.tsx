@@ -1,6 +1,6 @@
 import { getAuthenticatedUser } from "~/services/auth.service.server";
 import type { Route } from "./+types/$bookId";
-import { Form, isRouteErrorResponse, redirect } from "react-router";
+import { Form, isRouteErrorResponse, Link, redirect } from "react-router";
 import { getBookForUser, rateBook, updateBook } from "~/services/book.service.server";
 import { BookNotFoundError, ForbiddenError, ValidationError } from "~/lib/errors";
 import { Button } from "@bookshelf/ui/components/button";
@@ -75,6 +75,9 @@ export default function BookDetailRoute({ loaderData, actionData }: Route.Compon
     <main>
       <h1>{book.title}</h1>
       <p>by {book.author}</p>
+      <p>
+        <Link to={`/books/${book.id}/notes`}>View notes</Link>
+      </p>
 
       <section>
         <h2>Shelf: {book.shelf}</h2>
