@@ -4,11 +4,11 @@ import { BasePage } from "./BasePage";
 
 export class ShelvesPage extends BasePage {
   async expectBookTitles(expectedTitles: string[]) {
-    const bookTitleElements = await this.page.getByTestId("book-title").all();
-    const bookTitles = await Promise.all(bookTitleElements.map((el) => el.textContent()));
-    expectedTitles.forEach((expectedTitle) => {
-      expect(bookTitles).toContain(expectedTitle);
-    });
+    for (const title of expectedTitles) {
+      await expect(
+        this.page.getByTestId("book-title").filter({ hasText: title }),
+      ).toBeVisible();
+    }
   }
 
   async expectHeaderNameAndCount(userName: string, count: number) {
