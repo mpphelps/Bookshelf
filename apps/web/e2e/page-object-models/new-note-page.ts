@@ -7,7 +7,7 @@ export class NewNotePage extends BasePage {
   }
 
   async fillContent(content: string) {
-    await this.page.getByLabel("Note").fill(content);
+    await this.page.getByLabel("Note", { exact: true }).fill(content);
   }
 
   async submit() {
@@ -16,13 +16,6 @@ export class NewNotePage extends BasePage {
 
   async createNote(content: string) {
     await this.fillContent(content);
-    await this.submit();
-  }
-
-  async submitWithoutClientValidation() {
-    await this.page.evaluate(() => {
-      document.querySelectorAll("[required]").forEach((el) => el.removeAttribute("required"));
-    });
     await this.submit();
   }
 

@@ -19,7 +19,7 @@ test.describe("create book", () => {
   test("shows all errors when the form is empty", async ({ page }) => {
     const newBookPage = new NewBookPage(page);
     await newBookPage.goTo();
-    await newBookPage.submitWithoutClientValidation();
+    await newBookPage.submit();
 
     await newBookPage.expectStillOnNewBookPage();
     await newBookPage.expectFieldError("Title is required");
@@ -30,7 +30,7 @@ test.describe("create book", () => {
     const newBookPage = new NewBookPage(page);
     await newBookPage.goTo();
     await newBookPage.fillTitle("Dune");
-    await newBookPage.submitWithoutClientValidation();
+    await newBookPage.submit();
 
     await newBookPage.expectFieldError("Author is required");
     await newBookPage.expectTitleValue("Dune");

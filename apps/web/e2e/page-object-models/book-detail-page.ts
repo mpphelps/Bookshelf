@@ -47,4 +47,12 @@ export class BookDetailPage extends BasePage {
   async expectCurrentRating(rating: number) {
     await expect(this.page.getByText(`Current: ${rating}/5`)).toBeVisible();
   }
+
+  async expectNoNotes() {
+    await expect(this.page.getByText("No notes yet.")).toBeVisible();
+  }
+
+  async expectNoteContents(contents: string[]) {
+    await expect(this.page.getByTestId("note")).toHaveText(contents);
+  }
 }

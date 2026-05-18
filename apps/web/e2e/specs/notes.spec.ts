@@ -1,7 +1,7 @@
 import { expect } from "@playwright/test";
 import { prisma } from "@bookshelf/database";
 import { test } from "../test-fixtures";
-import { NotesPage } from "../page-object-models/notes-pages";
+import { BookDetailPage } from "../page-object-models/book-detail-page";
 import { NewNotePage } from "../page-object-models/new-note-page";
 
 test.describe("notes — owner", () => {
@@ -13,23 +13,23 @@ test.describe("notes — owner", () => {
       data: { userId: user.id, title: "Dune", author: "Frank Herbert", shelf: "READING" },
     });
 
-    const notesPage = new NotesPage(page, book.id);
-    await notesPage.goTo();
-    await notesPage.expectEmptyState();
+    const detail = new BookDetailPage(page, book.id);
+    await detail.goTo();
+    await detail.expectNoNotes();
   });
 
-  test("creates a note and shows it on the list", async ({ page }) => {
+  test("creates a note via the modal and shows it inline", async ({ page }) => {
     const user = await prisma.user.findUniqueOrThrow({ where: { email: "test@example.com" } });
     const book = await prisma.book.create({
       data: { userId: user.id, title: "Dune", author: "Frank Herbert", shelf: "READING" },
     });
 
-    const newNotePage = new NewNotePage(page, book.id);
-    await newNotePage.goTo();
-    await newNotePage.createNote("First impressions of arrakis");
+    const newNote = new NewNotePage(page, book.id);
+    await newNote.goTo();
+    await newNote.createNote("First impressions of arrakis");
 
-    const notesPage = new NotesPage(page, book.id);
-    await notesPage.expectNoteContents(["First impressions of arrakis"]);
+    const detail = new BookDetailPage(page, book.id);
+    await detail.expectNoteContents(["First impressions of arrakis"]);
   });
 
   test("lists notes with newest first", async ({ page }) => {
@@ -37,7 +37,6 @@ test.describe("notes — owner", () => {
     const book = await prisma.book.create({
       data: { userId: user.id, title: "Dune", author: "Frank Herbert", shelf: "READING" },
     });
-    // Seed with explicit timestamps for deterministic ordering
     await prisma.note.create({
       data: { bookId: book.id, content: "older", createdAt: new Date(Date.now() - 60_000) },
     });
@@ -45,9 +44,9 @@ test.describe("notes — owner", () => {
       data: { bookId: book.id, content: "newer", createdAt: new Date() },
     });
 
-    const notesPage = new NotesPage(page, book.id);
-    await notesPage.goTo();
-    await notesPage.expectNoteContents(["newer", "older"]);
+    const detail = new BookDetailPage(page, book.id);
+    await detail.goTo();
+    await detail.expectNoteContents(["newer", "older"]);
   });
 
   test("rejects empty note content", async ({ page }) => {
@@ -56,17 +55,17 @@ test.describe("notes — owner", () => {
       data: { userId: user.id, title: "Dune", author: "Frank Herbert", shelf: "READING" },
     });
 
-    const newNotePage = new NewNotePage(page, book.id);
-    await newNotePage.goTo();
-    await newNotePage.submitWithoutClientValidation();
-    await newNotePage.expectContentError("Note content cannot be empty");
+    const newNote = new NewNotePage(page, book.id);
+    await newNote.goTo();
+    await newNote.submit();
+    await newNote.expectContentError("Note content cannot be empty");
   });
 });
 
 test.describe("notes — non-owner", () => {
   test.use({ user: { email: "viewer@example.com", name: "Viewer" } });
 
-  test("returns 403 when viewing another user's notes", async ({ page }) => {
+  test("returns 403 when viewing another user's book detail (which inlines notes)", async ({ page }) => {
     const owner = await prisma.user.create({
       data: { email: "owner@example.com", name: "Owner" },
     });
@@ -75,9 +74,9 @@ test.describe("notes — non-owner", () => {
     });
     await prisma.note.create({ data: { bookId: book.id, content: "secret" } });
 
-    const notesPage = new NotesPage(page, book.id);
-    await notesPage.goTo();
-    await notesPage.expectErrorMessage("403");
+    const detail = new BookDetailPage(page, book.id);
+    await detail.goTo();
+    await detail.expectErrorMessage("403");
   });
 
   test("returns 403 when posting a note to another user's book", async ({ page }) => {

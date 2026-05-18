@@ -28,17 +28,6 @@ export class NewBookPage extends BasePage {
     await this.page.getByRole("button", { name: "Add Book" }).click();
   }
 
-  async disableClientValidation() {
-    await this.page.evaluate(() => {
-      document.querySelectorAll("[required]").forEach((el) => el.removeAttribute("required"));
-    });
-  }
-
-  async submitWithoutClientValidation() {
-    await this.disableClientValidation();
-    await this.submit();
-  }
-
   async expectTitleValue(value: string) {
     await expect(this.page.getByLabel("Title")).toHaveValue(value);
   }

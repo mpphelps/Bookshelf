@@ -1,4 +1,4 @@
-import { redirect } from "react-router";
+import { Outlet, redirect } from "react-router";
 import type { Route } from "./+types/shelves";
 
 import { BracketDivider } from "@bookshelf/ui/components/bracket-divider";
@@ -72,6 +72,8 @@ export default function Shelves({ loaderData }: Route.ComponentProps) {
       <div className="mx-auto max-w-6xl px-6 pb-12">
         <TransmissionFooter total={total} />
       </div>
+
+      <Outlet />
     </div>
   );
 }

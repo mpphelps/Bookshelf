@@ -1,7 +1,8 @@
 import { getAuthenticatedUser } from "~/services/auth.service.server";
 import type { Route } from "./+types/$bookId";
-import { Form, isRouteErrorResponse, Link, redirect } from "react-router";
-import { getBookForUser, rateBook, updateBook } from "~/services/book.service.server";
+import { Form, isRouteErrorResponse, Link, Outlet, redirect } from "react-router";
+import { rateBook, updateBook } from "~/services/book.service.server";
+import { listNotesForBook } from "~/services/note.service.server";
 import { BookNotFoundError, ForbiddenError, ValidationError } from "~/lib/errors";
 import { Button } from "@bookshelf/ui/components/button";
 
@@ -12,8 +13,8 @@ export async function loader({ request, params }: Route.LoaderArgs) {
   }
 
   try {
-    const book = await getBookForUser(user, params.bookId);
-    return { user, book };
+    const { book, notes } = await listNotesForBook(user, params.bookId);
+    return { user, book, notes };
   } catch (error) {
     if (error instanceof BookNotFoundError || error instanceof ForbiddenError) {
       throw new Response(error.message, { status: error.status });
@@ -68,16 +69,13 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
 }
 
 export default function BookDetailRoute({ loaderData, actionData }: Route.ComponentProps) {
-  const { book } = loaderData;
+  const { book, notes } = loaderData;
   const errors = actionData?.errors;
 
   return (
     <main>
       <h1>{book.title}</h1>
       <p>by {book.author}</p>
-      <p>
-        <Link to={`/books/${book.id}/notes`}>View notes</Link>
-      </p>
 
       <section>
         <h2>Shelf: {book.shelf}</h2>
@@ -116,6 +114,27 @@ export default function BookDetailRoute({ loaderData, actionData }: Route.Compon
           </Form>
         </section>
       )}
+
+      <section>
+        <h2>Notes</h2>
+        <Button asChild>
+          <Link to={`/books/${book.id}/notes/new`}>+ Add note</Link>
+        </Button>
+
+        {notes.length === 0 ? (
+          <p>No notes yet.</p>
+        ) : (
+          <ul>
+            {notes.map((note) => (
+              <li key={note.id} data-testid="note">
+                {note.content}
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
+      <Outlet />
     </main>
   );
 }
