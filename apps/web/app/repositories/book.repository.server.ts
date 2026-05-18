@@ -29,4 +29,11 @@ export const bookRepository = {
       data,
     });
   },
+
+  async update(bookId: string, data: { title?: string; author?: string; shelf?: Shelf; rating?: number }) {
+    return prisma.book.update({
+      where: { id: bookId },
+      data,
+    });
+  },
 };
