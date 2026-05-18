@@ -1,7 +1,7 @@
 import { expect, type Page } from "@playwright/test";
-import { BaseBookShelvesPage } from "./BaseBookShelvesPage";
+import { BasePage } from "./BasePage";
 
-export class NotesPage extends BaseBookShelvesPage {
+export class NotesPage extends BasePage {
   constructor(page: Page, bookId: string) {
     super(page, `/books/${bookId}/notes`);
   }
@@ -11,8 +11,6 @@ export class NotesPage extends BaseBookShelvesPage {
   }
 
   async expectNoteContents(contents: string[]) {
-    const noteEls = await this.page.getByTestId("note").all();
-    const texts = await Promise.all(noteEls.map((el) => el.textContent()));
-    expect(texts).toEqual(contents);
+    await expect(this.page.getByTestId("note")).toHaveText(contents);
   }
 }

@@ -1,7 +1,7 @@
 import { expect, type Page } from "@playwright/test";
-import { BaseBookShelvesPage } from "./BaseBookShelvesPage";
+import { BasePage } from "./BasePage";
 
-export class NewNotePage extends BaseBookShelvesPage {
+export class NewNotePage extends BasePage {
   constructor(page: Page, bookId: string) {
     super(page, `/books/${bookId}/notes/new`);
   }

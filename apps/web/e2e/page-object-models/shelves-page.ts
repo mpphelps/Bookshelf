@@ -1,8 +1,16 @@
 import { expect } from "@playwright/test";
 import { formatCount } from "../../app/lib/format";
-import { BaseBookShelvesPage } from "./BaseBookShelvesPage";
+import { BasePage } from "./BasePage";
 
-export class ShelvesPage extends BaseBookShelvesPage {
+export class ShelvesPage extends BasePage {
+  async expectBookTitles(expectedTitles: string[]) {
+    const bookTitleElements = await this.page.getByTestId("book-title").all();
+    const bookTitles = await Promise.all(bookTitleElements.map((el) => el.textContent()));
+    expectedTitles.forEach((expectedTitle) => {
+      expect(bookTitles).toContain(expectedTitle);
+    });
+  }
+
   async expectHeaderNameAndCount(userName: string, count: number) {
     const header = this.page.getByRole("heading", { level: 1 });
     const firstName = userName.split(" ")[0];

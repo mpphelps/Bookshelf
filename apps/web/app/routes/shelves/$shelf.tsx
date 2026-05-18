@@ -46,7 +46,7 @@ export default function ShelfRoute({ loaderData }: Route.ComponentProps) {
       <p>Shelf: {shelfKey}</p>
       <ul>
         {books.map((book) => (
-          <li key={book.id} aria-label="book-title">
+          <li key={book.id} data-testid="book-title">
             <Link to={`/books/${book.id}`}>{book.title}</Link>
           </li>
         ))}
