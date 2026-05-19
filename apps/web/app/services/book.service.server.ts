@@ -99,6 +99,13 @@ export async function updateBook(user: AuthUser, bookId: string, input: { title?
   return bookRepository.update(book.id, data);
 }
 
+export async function deleteBook(user: AuthUser, bookId: string) {
+  const book = await getBookForUser(user, bookId); // ownership gate
+
+  await bookRepository.delete(book.id);
+  return book;
+}
+
 export async function rateBook(user: AuthUser, bookId: string, rating: number) {
   const book = await getBookForUser(user, bookId); // ownership FIRST
 

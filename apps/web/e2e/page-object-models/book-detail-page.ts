@@ -55,4 +55,9 @@ export class BookDetailPage extends BasePage {
   async expectNoteContents(contents: string[]) {
     await expect(this.page.getByTestId("note")).toHaveText(contents);
   }
+
+  async deleteBook() {
+    this.page.once("dialog", (dialog) => dialog.accept());
+    await this.page.getByRole("button", { name: "Delete book" }).click();
+  }
 }

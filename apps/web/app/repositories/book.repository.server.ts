@@ -36,4 +36,10 @@ export const bookRepository = {
       data,
     });
   },
+
+  async delete(bookId: string) {
+    return prisma.book.delete({
+      where: { id: bookId },
+    });
+  },
 };

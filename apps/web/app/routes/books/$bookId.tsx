@@ -1,6 +1,6 @@
 import { Form, Link, Outlet, isRouteErrorResponse, redirect } from "react-router";
 import { getAuthenticatedUser } from "~/services/auth.service.server";
-import { rateBook, updateBook } from "~/services/book.service.server";
+import { deleteBook, rateBook, updateBook } from "~/services/book.service.server";
 import { listNotesForBook } from "~/services/note.service.server";
 import { SHELF_LABELS, type ShelfKey } from "~/lib/shelves";
 import { BookNotFoundError, ForbiddenError, ValidationError } from "~/lib/errors";
@@ -68,6 +68,10 @@ export async function action({ request, params }: Route.ActionArgs) {
       const rating = Number(formData.get("rating") ?? "");
       await rateBook(user, params.bookId, rating);
       return { ok: true };
+    }
+    if (intent === "delete-book") {
+      const deleted = await deleteBook(user, params.bookId);
+      return redirect(`/shelves/${deleted.shelf.toLowerCase()}`);
     }
     return { errors: { intent: "Invalid intent" } };
   } catch (error) {
@@ -283,6 +287,36 @@ export default function BookDetailRoute({ loaderData, actionData }: Route.Compon
             ))}
           </ol>
         )}
+
+        {/* ─── DANGER ZONE ─────────────────────────── */}
+        <BracketDivider className="mt-12 mb-6" label="danger zone" />
+
+        <Panel padding="md" surface="flat" className="border-destructive/30">
+          <MicroLabel tone="default" className="mb-3 block text-destructive/80">
+            [ destructive action ]
+          </MicroLabel>
+          <h2 className="display text-xl md:text-2xl text-foreground mb-2 leading-tight">
+            Decommission volume
+          </h2>
+          <p className="mb-5 font-mono text-xs text-muted-foreground/80 leading-relaxed">
+            permanently removes this volume and all{" "}
+            <span className="text-foreground/80">{formatCount(notes.length)}</span> log{" "}
+            {notes.length === 1 ? "entry" : "entries"}. cannot be undone.
+          </p>
+          <Form
+            method="post"
+            onSubmit={(event) => {
+              if (!confirm(`Delete "${book.title}" and all its notes? This cannot be undone.`)) {
+                event.preventDefault();
+              }
+            }}
+          >
+            <input type="hidden" name="intent" value="delete-book" />
+            <Button type="submit" variant="destructive" size="sm">
+              Delete book
+            </Button>
+          </Form>
+        </Panel>
       </main>
 
       <div className="mx-auto max-w-6xl px-6 pb-12">
