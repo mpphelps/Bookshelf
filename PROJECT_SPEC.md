@@ -266,16 +266,41 @@ Subsequent requests → loader reads cookie → validates JWT → extracts user 
 - [x] E2E tests for each feature as it's built
 - All built with the 3-layer architecture (route → service → repo)
 
-### Phase 2b: CRUD Completion
+### Phase 2b: CRUD Completion ✅
 
-Round out update/delete patterns missed in initial Phase 2. Ship before Phase 4.
+Round out update/delete patterns missed in initial Phase 2.
 
-- [ ] Delete book (cascade-deletes notes — verify `Note.book` has `onDelete: Cascade`)
-- [ ] Edit note (modal sub-route `/books/:bookId/notes/:noteId/edit`)
-- [ ] Delete note (inline action on `LogEntry`)
-- [ ] E2E coverage including negative ownership tests for all three
+- [x] Delete book (cascade-deletes notes; migration `add_cascade_delete_notes` adds `onDelete: Cascade` on `Note.book`)
+- [x] Edit note (modal sub-route `/books/:bookId/notes/:noteId/edit`)
+- [x] Delete note (inline action on `LogEntry`)
+- [x] E2E coverage including negative ownership tests for all three
 
-Note service introduces a `getNoteForUser` helper (Note → Book → User) so update/delete share one ownership gate.
+Note service introduces `getNoteForUser` (Note → Book → User), which composes `getBookForUser` — single ownership gate reused by update + delete. Repos stay single-table.
+
+### Phase 3b: Production Deployment (Pi 5 self-host)
+
+Stand up a real public-facing environment on a home Raspberry Pi 5 so Phase 4 migration exercises also teach prod-migration practice. AWS rejected on cost — target spend ~$1-2/mo (just domain).
+
+**Architecture:** Pi 5 runs `docker compose` with `app` (RR7 + Prisma) + `postgres` (volume on SSD). Cloudflare Tunnel exposes the app at `bookshelf.<domain>`. Self-hosted GitHub Actions runner on the Pi handles deploy; hosted runners handle lint/build/e2e.
+
+Setup tasks:
+- [ ] Register domain (Cloudflare Registrar)
+- [ ] Install Docker + Docker Compose on Pi
+- [ ] (If SD-card only) get an external SSD for Postgres volume
+- [ ] Verify local production build (`npm run build`, `npm run start`)
+- [ ] Fix `turbo.json` build output globs (`.next/**` → `build/**`)
+- [ ] Rewrite Dockerfile for monorepo + `prisma generate`
+- [ ] Container entrypoint runs `prisma migrate deploy` before `react-router-serve`
+- [ ] `docker-compose.yml` with `app` + `postgres` services + named volume on SSD path
+- [ ] Get stack running locally on Pi (manual `docker compose up`)
+- [ ] Cloudflare Tunnel: install `cloudflared`, create tunnel, route DNS to it
+- [ ] Self-hosted GitHub Actions runner installed + registered to the repo on the Pi
+- [ ] CI workflow (hosted runner): lint, build, e2e against ephemeral Postgres
+- [ ] CD workflow (self-hosted runner): on success → `git pull`, `docker compose build`, `prisma migrate deploy`, `docker compose up -d`
+- [ ] Auth0 prod callback URL added (`https://bookshelf.<domain>/auth/callback`)
+- [ ] `SESSION_SECRET` + Auth0 envs set as GHA secrets, passed to container at runtime
+- [ ] Nightly `pg_dump` cron + off-site upload (Backblaze B2 free tier)
+- [ ] Smoke test live app: login → add book → move shelf → add/edit/delete note → delete book
 
 ### Phase 3: Unit & Integration Testing (deferred)
 
