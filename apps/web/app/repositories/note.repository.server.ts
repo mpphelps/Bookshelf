@@ -26,4 +26,10 @@ export const noteRepository = {
       data,
     });
   },
+
+  async delete(noteId: string) {
+    return prisma.note.delete({
+      where: { id: noteId },
+    });
+  },
 };

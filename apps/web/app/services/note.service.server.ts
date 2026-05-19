@@ -45,3 +45,10 @@ export async function updateNote(user: AuthUser, noteId: string, content: string
 
   return noteRepository.update(note.id, { content: trimmed });
 }
+
+export async function deleteNote(user: AuthUser, noteId: string) {
+  const note = await getNoteForUser(user, noteId); // transitive ownership gate
+
+  await noteRepository.delete(note.id);
+  return note;
+}

@@ -1,9 +1,9 @@
 import { Form, Link, Outlet, isRouteErrorResponse, redirect } from "react-router";
 import { getAuthenticatedUser } from "~/services/auth.service.server";
 import { deleteBook, rateBook, updateBook } from "~/services/book.service.server";
-import { listNotesForBook } from "~/services/note.service.server";
+import { deleteNote, listNotesForBook } from "~/services/note.service.server";
 import { SHELF_LABELS, type ShelfKey } from "~/lib/shelves";
-import { BookNotFoundError, ForbiddenError, ValidationError } from "~/lib/errors";
+import { BookNotFoundError, ForbiddenError, NoteNotFoundError, ValidationError } from "~/lib/errors";
 import type { Route } from "./+types/$bookId";
 
 import { BracketDivider } from "@bookshelf/ui/components/bracket-divider";
@@ -73,12 +73,21 @@ export async function action({ request, params }: Route.ActionArgs) {
       const deleted = await deleteBook(user, params.bookId);
       return redirect(`/shelves/${deleted.shelf.toLowerCase()}`);
     }
+    if (intent === "delete-note") {
+      const noteId = String(formData.get("noteId") ?? "");
+      await deleteNote(user, noteId);
+      return { ok: true };
+    }
     return { errors: { intent: "Invalid intent" } };
   } catch (error) {
     if (error instanceof ValidationError) {
       return { errors: error.fields };
     }
-    if (error instanceof BookNotFoundError || error instanceof ForbiddenError) {
+    if (
+      error instanceof BookNotFoundError ||
+      error instanceof NoteNotFoundError ||
+      error instanceof ForbiddenError
+    ) {
       throw new Response(error.message, { status: error.status });
     }
     throw error;

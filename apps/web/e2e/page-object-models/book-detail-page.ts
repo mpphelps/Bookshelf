@@ -60,4 +60,9 @@ export class BookDetailPage extends BasePage {
     this.page.once("dialog", (dialog) => dialog.accept());
     await this.page.getByRole("button", { name: "Delete book" }).click();
   }
+
+  async deleteNoteAtSlot(slot: string) {
+    this.page.once("dialog", (dialog) => dialog.accept());
+    await this.page.getByRole("button", { name: `Delete note ${slot}` }).click();
+  }
 }
