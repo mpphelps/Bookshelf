@@ -6,6 +6,14 @@ export class BookNotFoundError extends Error {
   }
 }
 
+export class NoteNotFoundError extends Error {
+  readonly status = 404;
+  constructor(noteId: string) {
+    super(`Note with ID ${noteId} not found`);
+    this.name = "NoteNotFoundError";
+  }
+}
+
 export class ShelfNotFoundError extends Error {
   readonly status = 404;
   constructor(shelfKey: string) {

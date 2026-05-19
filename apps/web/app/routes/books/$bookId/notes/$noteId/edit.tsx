@@ -1,16 +1,25 @@
 import { isRouteErrorResponse, redirect, useActionData, useParams } from "react-router";
 import { getAuthenticatedUser } from "~/services/auth.service.server";
-import { createNoteForBook } from "~/services/note.service.server";
-import { BookNotFoundError, ForbiddenError, ValidationError } from "~/lib/errors";
-import type { Route } from "./+types/new";
+import { getNoteForUser, updateNote } from "~/services/note.service.server";
+import { ForbiddenError, NoteNotFoundError, ValidationError } from "~/lib/errors";
+import type { Route } from "./+types/edit";
 
 import { RouteModal } from "~/components/layout/route-modal";
 import { NoteFormModal } from "~/components/books/note-form-modal";
 
-export async function loader({ request }: Route.LoaderArgs) {
+export async function loader({ request, params }: Route.LoaderArgs) {
   const user = await getAuthenticatedUser(request);
   if (!user) return redirect("/auth/login");
-  return { user };
+
+  try {
+    const note = await getNoteForUser(user, params.noteId);
+    return { note };
+  } catch (error) {
+    if (error instanceof NoteNotFoundError || error instanceof ForbiddenError) {
+      throw new Response(error.message, { status: error.status });
+    }
+    throw error;
+  }
 }
 
 export async function action({ request, params }: Route.ActionArgs) {
@@ -21,13 +30,13 @@ export async function action({ request, params }: Route.ActionArgs) {
   const content = String(formData.get("content") ?? "");
 
   try {
-    await createNoteForBook(user, params.bookId, content);
+    await updateNote(user, params.noteId, content);
     return redirect(`/books/${params.bookId}`);
   } catch (error) {
     if (error instanceof ValidationError) {
       return { errors: error.fields, values: { content } };
     }
-    if (error instanceof BookNotFoundError || error instanceof ForbiddenError) {
+    if (error instanceof NoteNotFoundError || error instanceof ForbiddenError) {
       throw new Response(error.message, { status: error.status });
     }
     throw error;
@@ -52,17 +61,17 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
   throw error;
 }
 
-export default function NewNoteRoute() {
+export default function EditNoteRoute({ loaderData }: Route.ComponentProps) {
   const params = useParams<{ bookId: string }>();
   const actionData = useActionData<typeof action>();
 
   return (
     <NoteFormModal
       returnTo={`/books/${params.bookId}`}
-      title="Add a note"
-      description="Capture a thought, quote, or reaction."
-      submitLabel="Save note"
-      defaultContent={actionData?.values?.content}
+      title="Edit note"
+      description="Revise this log entry."
+      submitLabel="Save changes"
+      defaultContent={actionData?.values?.content ?? loaderData.note.content}
       errors={actionData?.errors}
     />
   );

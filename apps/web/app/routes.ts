@@ -7,6 +7,7 @@ export default [
   route("shelves/:shelf", "routes/shelves/$shelf.tsx"),
   route("books/:bookId", "routes/books/$bookId.tsx", [
     route("notes/new", "routes/books/$bookId/notes/new.tsx"),
+    route("notes/:noteId/edit", "routes/books/$bookId/notes/$noteId/edit.tsx"),
   ]),
   route("health", "routes/health.tsx"),
   route("auth/login", "routes/auth.login.ts"),

@@ -282,7 +282,13 @@ export default function BookDetailRoute({ loaderData, actionData }: Route.Compon
           <ol className="grid grid-cols-1 gap-3">
             {notes.map((note, idx) => (
               <li key={note.id}>
-                <LogEntry index={idx} createdAt={note.createdAt} content={note.content} />
+                <LogEntry
+                  index={idx}
+                  bookId={book.id}
+                  noteId={note.id}
+                  createdAt={note.createdAt}
+                  content={note.content}
+                />
               </li>
             ))}
           </ol>
