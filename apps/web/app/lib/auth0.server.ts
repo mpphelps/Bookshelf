@@ -22,11 +22,12 @@ function getSigningKey(kid: string): Promise<string> {
   });
 }
 
-export function getAuthorizationUrl(): string {
+export function getAuthorizationUrl(request: Request): string {
+  const origin = new URL(request.url).origin;
   const params = new URLSearchParams({
     response_type: "code",
     client_id: clientId,
-    redirect_uri: callbackUrl,
+    redirect_uri: `${origin}/auth/callback`,
     audience: audience,
     scope: "openid profile email",
     state: crypto.randomUUID(),
@@ -34,7 +35,8 @@ export function getAuthorizationUrl(): string {
   return `https://${domain}/authorize?${params}`;
 }
 
-export async function exchangeCodeForTokens(code: string) {
+export async function exchangeCodeForTokens(request: Request, code: string) {
+  const origin = new URL(request.url).origin;
   const response = await fetch(`https://${domain}/oauth/token`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -42,7 +44,7 @@ export async function exchangeCodeForTokens(code: string) {
       grant_type: "authorization_code",
       client_id: clientId,
       client_secret: clientSecret,
-      redirect_uri: callbackUrl,
+      redirect_uri: `${origin}/auth/callback`,
       code,
     }),
   });
@@ -80,10 +82,11 @@ export async function verifyAccessToken(token: string) {
   };
 }
 
-export function getLogoutUrl(): string {
+export function getLogoutUrl(request: Request): string {
+  const origin = new URL(request.url).origin;
   const params = new URLSearchParams({
     client_id: clientId,
-    returnTo: "http://localhost:5173",
+    returnTo: origin,
   });
   return `https://${domain}/v2/logout?${params}`;
 }

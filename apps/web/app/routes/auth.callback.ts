@@ -11,7 +11,7 @@ export async function loader({ request }: Route.LoaderArgs) {
     throw new Response("Missing authorization code", { status: 400 });
   }
 
-  const { accessToken } = await handleCallback(code);
+  const { accessToken } = await handleCallback(request, code);
   const headers = await createSessionHeaders(accessToken);
 
   return redirect("/", { headers });

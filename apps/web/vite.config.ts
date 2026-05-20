@@ -5,5 +5,6 @@ import tsconfigPaths from "vite-tsconfig-paths";
 
 export default defineConfig({
   envDir: "../../packages/database",
+  server: { host: true },
   plugins: [tailwindcss(), reactRouter(), tsconfigPaths()],
 });

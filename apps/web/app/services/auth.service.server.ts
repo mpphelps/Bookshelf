@@ -10,11 +10,11 @@ export type AuthUser = {
   permissions: string[];
 };
 
-export async function handleCallback(code: string): Promise<{
+export async function handleCallback(request: Request, code: string): Promise<{
   accessToken: string;
   user: AuthUser;
 }> {
-  const tokens = await exchangeCodeForTokens(code);
+  const tokens = await exchangeCodeForTokens(request, code);
   const payload = await verifyAccessToken(tokens.access_token);
 
   const email = payload.email;
