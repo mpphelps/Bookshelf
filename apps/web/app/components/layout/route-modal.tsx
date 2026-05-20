@@ -1,6 +1,6 @@
 import * as React from "react";
 import { Dialog } from "radix-ui";
-import { useNavigate } from "react-router";
+import { useLocation, useNavigate } from "react-router";
 
 import { Button } from "@bookshelf/ui/components/button";
 
@@ -14,8 +14,18 @@ type RouteModalProps = {
 
 export function RouteModal({ returnTo, title, description, children, className }: RouteModalProps) {
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const handleClose = () => {
+    if (location.key === "default") {
+      navigate(returnTo, { replace: true });
+    } else {
+      navigate(-1);
+    }
+  };
+
   return (
-    <Dialog.Root open onOpenChange={(open) => !open && navigate(returnTo)}>
+    <Dialog.Root open onOpenChange={(open) => !open && handleClose()}>
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 z-40 bg-background/80 backdrop-blur-sm" />
         <Dialog.Content
@@ -25,11 +35,7 @@ export function RouteModal({ returnTo, title, description, children, className }
           }
         >
           <Dialog.Title className="text-lg font-semibold">{title}</Dialog.Title>
-          {description != null && (
-            <Dialog.Description className="mt-1 text-sm text-muted-foreground">
-              {description}
-            </Dialog.Description>
-          )}
+          {description != null && <Dialog.Description className="mt-1 text-sm text-muted-foreground">{description}</Dialog.Description>}
           <div className="mt-4">{children}</div>
         </Dialog.Content>
       </Dialog.Portal>
@@ -37,10 +43,7 @@ export function RouteModal({ returnTo, title, description, children, className }
   );
 }
 
-export function RouteModalCancel({
-  children = "Cancel",
-  ...props
-}: React.ComponentProps<typeof Button>) {
+export function RouteModalCancel({ children = "Cancel", ...props }: React.ComponentProps<typeof Button>) {
   return (
     <Dialog.Close asChild>
       <Button type="button" variant="ghost" {...props}>
