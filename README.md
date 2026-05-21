@@ -18,13 +18,14 @@ Built as a learning project for React Router v7, Prisma v7, Turborepo, Docker, a
 
 ```
 apps/web/                       React Router app (routes, services, repos, components)
-packages/database/              Prisma schema, migrations, generated client
+packages/database/              Prisma schema, migrations, prisma.config.ts, generated client
 packages/ui/                    Shared React components (Button, Input, etc.)
 packages/eslint-config/         Shared ESLint config
 packages/typescript-config/     Shared tsconfig
 Dockerfile                      Multi-stage build for the web app
+docker-entrypoint.sh            Runs `prisma migrate deploy`, then starts the server
 docker-compose.yml              Dev: Postgres only (dev + test DBs)
-docker-compose.prod.yml         Prod: app + Postgres
+docker-compose.prod.yml         Prod: app + Postgres (project name `bookshelf-prod`)
 ```
 
 The web app follows a strict three-layer backend pattern:
@@ -100,6 +101,10 @@ docker compose -f docker-compose.prod.yml up --build
 ```
 
 App is at `http://localhost:3000`. The container runs `prisma migrate deploy` on every start, so a fresh volume auto-applies all migrations.
+
+The prod compose uses project name `bookshelf-prod` and its own `pgdata_prod` volume, so it will not collide with or overwrite your dev DB container/volume.
+
+Auth note: session cookies are `Secure`-only in production. `http://localhost:3000` works (browsers grant localhost an HTTP exemption), but other LAN hosts over plain HTTP will drop the cookie and loop on the Auth0 callback. Real LAN/phone testing requires HTTPS (handled by Cloudflare Tunnel on the Pi).
 
 ## Deployment
 
