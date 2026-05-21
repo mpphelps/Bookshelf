@@ -1,159 +1,125 @@
-# Turborepo starter
+# Bookshelf
 
-This Turborepo starter is maintained by the Turborepo core team.
+A personal book tracker. Users sign in, add books to one of three shelves (Want to Read, Reading, Finished), leave notes, and rate finished books.
 
-## Using this example
+Built as a learning project for React Router v7, Prisma v7, Turborepo, Docker, and self-hosted deployment.
 
-Run the following command:
+## Stack
 
-```sh
-npx create-turbo@latest
+- **Framework:** React Router v7 (formerly Remix) + React 19 + TypeScript + Vite
+- **Styling:** Tailwind CSS v4
+- **ORM:** Prisma v7 with PostgreSQL 17 (via `@prisma/adapter-pg` driver adapter)
+- **Monorepo:** Turborepo with npm workspaces
+- **Auth:** Auth0 (OAuth 2.0 Authorization Code + PKCE)
+- **Testing:** Playwright (e2e)
+- **Deployment:** Docker + Docker Compose, self-hosted on a Raspberry Pi 5 behind Cloudflare Tunnel
+
+## Layout
+
+```
+apps/web/                       React Router app (routes, services, repos, components)
+packages/database/              Prisma schema, migrations, generated client
+packages/ui/                    Shared React components (Button, Input, etc.)
+packages/eslint-config/         Shared ESLint config
+packages/typescript-config/     Shared tsconfig
+Dockerfile                      Multi-stage build for the web app
+docker-compose.yml              Dev: Postgres only (dev + test DBs)
+docker-compose.prod.yml         Prod: app + Postgres
 ```
 
-## What's inside?
+The web app follows a strict three-layer backend pattern:
 
-This Turborepo includes the following packages/apps:
+- **Routes** (`apps/web/app/routes/`) — thin: parse the request, call a service, return a response. No business logic.
+- **Services** (`apps/web/app/services/`) — validation, ownership checks, orchestration. Throw domain errors.
+- **Repositories** (`apps/web/app/repositories/`) — Prisma queries only. One per entity. No cross-entity joins.
 
-### Apps and Packages
+See [`CLAUDE.md`](./CLAUDE.md) for full architectural conventions and [`PROJECT_SPEC.md`](./PROJECT_SPEC.md) for the phased roadmap.
 
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
-- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
-- `@repo/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
+## Getting started
 
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
+### Prerequisites
 
-### Utilities
+- Node.js ≥ 20
+- Docker Desktop
+- An Auth0 tenant (free tier)
 
-This Turborepo has some additional tools already setup for you:
+### Setup
 
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
+```bash
+# Install dependencies
+npm install
 
-### Build
+# Start Postgres (dev + test DBs)
+docker compose up -d
 
-To build all apps and packages, run the following command:
+# Create packages/database/.env with these keys:
+#   DATABASE_URL=postgresql://bookshelf:bookshelf@localhost:5432/bookshelf
+#   SESSION_SECRET=<32+ char random string>
+#   AUTH0_DOMAIN=<your-tenant>.auth0.com
+#   AUTH0_CLIENT_ID=...
+#   AUTH0_CLIENT_SECRET=...
+#   AUTH0_AUDIENCE=...
 
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
+# Apply migrations
+cd packages/database
+npx prisma migrate deploy
+cd ../..
 
-```sh
-cd my-turborepo
-turbo build
+# Run the app
+npm run dev
 ```
 
-Without global `turbo`, use your package manager:
+App is at `http://localhost:5173`.
 
-```sh
-cd my-turborepo
-npx turbo build
-yarn dlx turbo build
-pnpm exec turbo build
+## Common commands
+
+```bash
+# Dev (from repo root)
+npm run dev                              # Turbo: starts all apps
+npm run build                            # Turbo: builds all apps + packages
+docker compose up -d                     # Start Postgres
+docker compose down                      # Stop Postgres
+
+# Database (from packages/database)
+npx prisma migrate dev --name <name>     # Create + apply migration
+npx prisma migrate dev --create-only     # Generate SQL without applying (review first)
+npx prisma migrate deploy                # Apply pending migrations (prod-style)
+npx prisma generate                      # Regenerate client from schema
+
+# E2E tests (from apps/web)
+npm run test:e2e                         # Headless Playwright run
+npm run test:e2e:headed                  # With browser UI
 ```
 
-You can build a specific package by using a [filter](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters):
+## Production stack (local test)
 
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
+To build and run the full prod stack locally (app + dedicated Postgres):
 
-```sh
-turbo build --filter=docs
+```bash
+docker compose -f docker-compose.prod.yml up --build
 ```
 
-Without global `turbo`:
+App is at `http://localhost:3000`. The container runs `prisma migrate deploy` on every start, so a fresh volume auto-applies all migrations.
 
-```sh
-npx turbo build --filter=docs
-yarn exec turbo build --filter=docs
-pnpm exec turbo build --filter=docs
-```
+## Deployment
 
-### Develop
+Production deploys to a Raspberry Pi 5 at home:
 
-To develop all apps and packages, run the following command:
+- Docker Compose runs the app + Postgres on the Pi
+- Cloudflare Tunnel exposes the app publicly (free, auto-SSL, no port forwarding)
+- A self-hosted GitHub Actions runner on the Pi handles deploys
+- Hosted runners handle lint, build, and e2e in CI
+- Nightly `pg_dump` to off-site storage (Backblaze B2)
 
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
+See [`PROJECT_SPEC.md`](./PROJECT_SPEC.md) §3b for the full deployment plan.
 
-```sh
-cd my-turborepo
-turbo dev
-```
+## Data model
 
-Without global `turbo`, use your package manager:
+- **User** — id, email (unique), name, timestamps. Has many Books.
+- **Book** — id, title, author, shelf, rating (nullable). Belongs to User. Has many Notes.
+- **Note** — id, content, timestamps. Belongs to Book (cascade delete).
+- **Shelf enum** — `WANT_TO_READ`, `READING`, `FINISHED`.
 
-```sh
-cd my-turborepo
-npx turbo dev
-yarn exec turbo dev
-pnpm exec turbo dev
-```
+## License
 
-You can develop a specific package by using a [filter](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters):
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
-
-```sh
-turbo dev --filter=web
-```
-
-Without global `turbo`:
-
-```sh
-npx turbo dev --filter=web
-yarn exec turbo dev --filter=web
-pnpm exec turbo dev --filter=web
-```
-
-### Remote Caching
-
-> [!TIP]
-> Vercel Remote Cache is free for all plans. Get started today at [vercel.com](https://vercel.com/signup?utm_source=remote-cache-sdk&utm_campaign=free_remote_cache).
-
-Turborepo can use a technique known as [Remote Caching](https://turborepo.dev/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
-
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup?utm_source=turborepo-examples), then enter the following commands:
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
-
-```sh
-cd my-turborepo
-turbo login
-```
-
-Without global `turbo`, use your package manager:
-
-```sh
-cd my-turborepo
-npx turbo login
-yarn exec turbo login
-pnpm exec turbo login
-```
-
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
-
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
-
-```sh
-turbo link
-```
-
-Without global `turbo`:
-
-```sh
-npx turbo link
-yarn exec turbo link
-pnpm exec turbo link
-```
-
-## Useful Links
-
-Learn more about the power of Turborepo:
-
-- [Tasks](https://turborepo.dev/docs/crafting-your-repository/running-tasks)
-- [Caching](https://turborepo.dev/docs/crafting-your-repository/caching)
-- [Remote Caching](https://turborepo.dev/docs/core-concepts/remote-caching)
-- [Filtering](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters)
-- [Configuration Options](https://turborepo.dev/docs/reference/configuration)
-- [CLI Usage](https://turborepo.dev/docs/reference/command-line-reference)
+Personal project. No license granted.
