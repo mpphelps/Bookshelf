@@ -30,12 +30,14 @@ export function RouteModal({ returnTo, title, description, children, className }
         <Dialog.Overlay className="fixed inset-0 z-40 bg-background/80 backdrop-blur-sm" />
         <Dialog.Content
           className={
-            "fixed left-1/2 top-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2 rounded-lg border border-border bg-background p-6 shadow-lg " +
+            "fixed left-1/2 top-1/2 z-50 w-[calc(100vw-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-lg border border-border bg-background p-5 shadow-lg sm:p-6 " +
             (className ?? "")
           }
         >
-          <Dialog.Title className="text-lg font-semibold">{title}</Dialog.Title>
-          {description != null && <Dialog.Description className="mt-1 text-sm text-muted-foreground">{description}</Dialog.Description>}
+          <Dialog.Title className="break-words text-lg font-semibold">{title}</Dialog.Title>
+          {description != null && (
+            <Dialog.Description className="mt-1 break-words text-sm text-muted-foreground">{description}</Dialog.Description>
+          )}
           <div className="mt-4">{children}</div>
         </Dialog.Content>
       </Dialog.Portal>

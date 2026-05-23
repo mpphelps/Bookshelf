@@ -10,23 +10,25 @@ type TelemetryHeaderProps = {
 };
 
 export function TelemetryHeader({ userName, total }: TelemetryHeaderProps) {
-  const firstName = userName.split(" ")[0];
+  const firstName = userName.includes("@")
+    ? userName.split("@")[0]
+    : userName.split(" ")[0];
 
   return (
     <section className="mb-12 grid grid-cols-12 gap-6 items-end">
-      <div className="col-span-12 md:col-span-8">
+      <div className="col-span-12 min-w-0 md:col-span-8">
         <MicroLabel className="mb-3 block">
           <span className="text-primary">▸</span> personal library terminal
         </MicroLabel>
 
         <DisplayHeading
           as="h1"
-          className="text-3xl md:text-4xl text-foreground leading-[1.1]"
+          className="text-2xl sm:text-3xl md:text-4xl text-foreground leading-[1.1] break-words"
         >
           Greetings, {firstName}.
           <br />
           <span className="text-primary">{formatCount(total)}</span>{" "}
-          <span className="text-muted-foreground text-2xl md:text-3xl">
+          <span className="text-muted-foreground text-xl sm:text-2xl md:text-3xl">
             volumes on record.
           </span>
         </DisplayHeading>

@@ -3,3 +3,8 @@
 @import "../../../packages/ui/src/styles/globals.css";
 @source "../../../packages/ui/src/**/*.{ts,tsx}";
 @custom-variant dark (&:is(.dark *));
+
+html,
+body {
+  overflow-x: hidden;
+}
