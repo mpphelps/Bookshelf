@@ -1,0 +1,88 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+env:
+  DATABASE_URL: "postgresql://dummy:dummy@localhost:5432/dummy"
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+      - run: npm ci
+      - name: Generate Prisma client
+        run: npm run generate -w @bookshelf/database
+      - run: npm run lint
+
+  check-types:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+      - run: npm ci
+      - name: Generate Prisma client
+        run: npm run generate -w @bookshelf/database
+      - run: npm run check-types
+
+  build:
+    runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: "postgresql://dummy:dummy@localhost:5432/dummy"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+      - run: npm ci
+      - name: Generate Prisma client
+        run: npm run generate -w @bookshelf/database
+      - run: npm run build
+
+  e2e:
+    runs-on: ubuntu-latest
+    needs: build
+    services:
+      postgres:
+        image: postgres:17
+        ports:
+          - 5432:5432
+        env:
+          POSTGRES_USER: bookshelf
+          POSTGRES_PASSWORD: bookshelf
+          POSTGRES_DB: bookshelf
+        options: >-
+          --health-cmd="pg_isready -U bookshelf"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=10
+    env:
+      DATABASE_URL: "postgresql://bookshelf:bookshelf@localhost:5432/bookshelf"
+      SESSION_SECRET: "ci-session-secret-not-used-for-real-auth"
+      E2E_AUTH_BYPASS: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+      - run: npm ci
+      - name: Generate Prisma client
+        run: npm run generate -w @bookshelf/database
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+        working-directory: apps/web
+      - name: Run Playwright tests
+        run: npm run test:e2e
+        working-directory: apps/web
