@@ -9,7 +9,7 @@ on:
 
 jobs:
   deploy:
-    runs-on: [self-hosted, bookshelf-pi]
+    runs-on: self-hosted
     steps:
       - name: Sync latest main
         working-directory: /home/mpphelps/Bookshelf
