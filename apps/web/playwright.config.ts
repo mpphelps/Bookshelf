@@ -85,6 +85,11 @@ export default defineConfig({
       DATABASE_URL: process.env.DATABASE_URL!,
       SESSION_SECRET: process.env.SESSION_SECRET!,
       E2E_AUTH_BYPASS: process.env.E2E_AUTH_BYPASS!,
+      AUTH0_DOMAIN: process.env.AUTH0_DOMAIN ?? "test.auth0.com",
+      AUTH0_CLIENT_ID: process.env.AUTH0_CLIENT_ID ?? "test-client-id",
+      AUTH0_CLIENT_SECRET: process.env.AUTH0_CLIENT_SECRET ?? "test-client-secret",
+      AUTH0_CALLBACK_URL: process.env.AUTH0_CALLBACK_URL ?? "http://localhost:5174/auth/callback",
+      AUTH0_AUDIENCE: process.env.AUTH0_AUDIENCE ?? "https://test-api",
     },
   },
 });
