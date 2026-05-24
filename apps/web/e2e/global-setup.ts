@@ -14,6 +14,5 @@ export default async function globalSetup() {
     cwd: dbPackage,
     stdio: "inherit",
     env: process.env,
-    shell: true,
   });
 }

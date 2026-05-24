@@ -284,6 +284,7 @@ Stand up a real public-facing environment on a home Raspberry Pi 5 so Phase 4 mi
 **Architecture:** Pi 5 runs `docker compose` with `app` (RR7 + Prisma) + `postgres` (volume on SSD). Cloudflare Tunnel exposes the app at `bookshelf.<domain>`. Self-hosted GitHub Actions runner on the Pi handles deploy; hosted runners handle lint/build/e2e.
 
 Setup tasks:
+
 - [ ] Register domain (Cloudflare Registrar)
 - [ ] Install Docker + Docker Compose on Pi
 - [ ] (If SD-card only) get an external SSD for Postgres volume
@@ -332,6 +333,8 @@ Pattern matters; suggested payloads chosen to unlock Phase 6 features.
 - [ ] 6.1: Open Library API — search-first add-book modal (auto-fill title/author/cover from `openlibrary.org/search.json`); manual entry remains as fallback. Independent of Phase 4.
 - [ ] 6.2: Sort books on a shelf — URL state `?sort=title|author|genre|recent`; genre option requires Phase 4 M1.
 - [ ] 6.3: Drag-and-drop priority reordering within a shelf via `@dnd-kit/sortable`; requires Phase 4 M2 (`Book.priority`).
+- [ ] 6.4: Ability add a friend and see to see your friend's shelves
+- [ ] 6.5: Add redis caching where appropriate
 
 ---
 
