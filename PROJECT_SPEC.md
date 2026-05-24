@@ -334,7 +334,7 @@ Pattern matters; suggested payloads chosen to unlock Phase 6 features.
 - [ ] 6.2: Sort books on a shelf — URL state `?sort=title|author|genre|recent`; genre option requires Phase 4 M1.
 - [ ] 6.3: Drag-and-drop priority reordering within a shelf via `@dnd-kit/sortable`; requires Phase 4 M2 (`Book.priority`).
 - [ ] 6.4: Ability add a friend and see to see your friend's shelves
-- [ ] 6.5: Add redis caching where appropriate
+- [ ] 6.5: Add redis caching for getting friends updated lists
 
 ---
 
