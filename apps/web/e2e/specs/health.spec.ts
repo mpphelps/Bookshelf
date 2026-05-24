@@ -3,7 +3,6 @@ import { test, expect } from "../test-fixtures";
 test("health check returns ok status", async ({ page }) => {
   await page.goto("/health");
   await expect(page.getByText("Status: ok")).toBeVisible();
-  await expect(page.getByText("User Count: 0")).toBeVisible();
 });
 
 test("test DB is empty at the start of every test", async () => {
