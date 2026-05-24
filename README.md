@@ -237,6 +237,106 @@ sudo systemctl status cloudflared
 - **Infinite redirect loop after login** — session cookie is `Secure`-only but the request reached the app over plain HTTP. Verify the tunnel is the path in (not the LAN IP) and that the Auth0 callback URL is `https://`.
 - **`cloudflared: command not found` after install** — the apt source line is wrong (RPM URL). Recheck step 1.
 
+### GitHub Actions self-hosted runner (Raspberry Pi)
+
+A self-hosted runner is a daemon you install on the Pi that opens an outbound long-poll connection to GitHub and waits for jobs targeted at the label `self-hosted`. When a job arrives, it executes locally on the Pi — which is what lets the CD workflow do things like `git pull` and `docker compose up -d` against the live stack.
+
+#### 1. Create the runner in GitHub
+
+In the repo: **Settings → Actions → Runners → New self-hosted runner**.
+
+Pick **Linux** and **ARM64**. GitHub generates a one-time registration token and shows install commands tailored to that platform. Keep that page open — the token expires in ~1 hour and you'll need it in step 3.
+
+#### 2. Download the runner on the Pi
+
+```bash
+cd ~
+mkdir actions-runner && cd actions-runner
+
+# Replace X.Y.Z with the version GitHub shows you on the new-runner page
+curl -o actions-runner-linux-arm64-X.Y.Z.tar.gz -L \
+  https://github.com/actions/runner/releases/download/vX.Y.Z/actions-runner-linux-arm64-X.Y.Z.tar.gz
+
+# The SHA256 line is also on the GitHub page — paste it verbatim
+echo "<hash>  actions-runner-linux-arm64-X.Y.Z.tar.gz" | shasum -a 256 -c
+
+tar xzf ./actions-runner-linux-arm64-X.Y.Z.tar.gz
+```
+
+Two things to know:
+
+- Put it in your home directory, not inside `~/Bookshelf`. The runner keeps its own state (`_work/`, `.runner`, `.credentials`) which shouldn't mingle with the app repo.
+- The `shasum -c` step is supply-chain hygiene — it verifies the tarball matches what GitHub published. If it prints `OK`, the binary is intact.
+
+#### 3. Configure (register the runner)
+
+```bash
+./config.sh --url https://github.com/<you>/Bookshelf --token <ONE-TIME-TOKEN>
+```
+
+This is interactive. Defaults are fine for all four prompts:
+
+| Prompt | Default | Notes |
+|---|---|---|
+| Runner group | `Default` | Only matters in GitHub orgs |
+| Runner name | hostname (e.g. `raspberrypi`) | How it appears in the Runners list |
+| Runner labels | `self-hosted,Linux,ARM64` | What workflows match against |
+| Work folder | `_work` | Where checkouts/builds go |
+
+You can optionally add a custom label (like `bookshelf-pi`) at the labels prompt — useful if you ever add a second self-hosted runner and want to target one specifically with `runs-on: [self-hosted, bookshelf-pi]`. For a single-runner setup, the defaults are enough.
+
+Watch for `√ Connected to GitHub` and `√ Settings Saved.` Do **not** run `./run.sh` after — we want systemd to manage the process.
+
+#### 4. Install as a systemd service
+
+From inside `~/actions-runner/`:
+
+```bash
+sudo ./svc.sh install
+sudo ./svc.sh start
+sudo ./svc.sh status
+```
+
+What each does:
+
+- **`svc.sh install`** writes `/etc/systemd/system/actions.runner.<owner>-<repo>.<runner-name>.service`, runs `systemctl daemon-reload`, and `systemctl enable` so the runner starts on boot. The unit runs as your user (not root) — important, because the runner needs to execute `docker` commands under your `docker` group membership.
+- **`svc.sh start`** starts it now.
+- **`svc.sh status`** pretty-prints `systemctl status`. Look for `Active: active (running)` and a recent log line like `Listening for Jobs`.
+
+Then verify in the GitHub UI: **Settings → Actions → Runners** should show the runner with a green dot and `Idle` status.
+
+#### 5. Authorize the runner to run Docker without `sudo`
+
+This step was already done when you installed Docker (you added your user to the `docker` group). To verify:
+
+```bash
+docker ps      # should succeed without sudo
+groups         # should include "docker"
+```
+
+If `docker ps` errors with permission denied, `sudo usermod -aG docker $USER` then log out and back in.
+
+#### Troubleshooting
+
+- **Job stuck on "Waiting for a runner to pick up this job"** — runner is offline or its labels don't match `runs-on:`. Check Settings → Actions → Runners. If the runner's labels don't include what the workflow asks for, edit labels in the GitHub UI or simplify the workflow's `runs-on:` to just `self-hosted`.
+- **`./svc.sh install` fails with permission errors** — must be run with `sudo`. Same applies to `start` and `status`.
+- **Runner shows Offline despite systemd saying active** — usually a clock skew or network blip. Restart the service: `sudo systemctl restart actions.runner.<owner>-<repo>.<runner>.service`.
+
+### CI/CD workflows
+
+Two workflows live in `.github/workflows/`:
+
+- **`ci.yml`** — runs on every PR (and on pushes to `main` as a redundant safety net). Four jobs: `lint`, `check-types`, `build`, `e2e`. The first three run on hosted Ubuntu runners; `e2e` spins up a Postgres service container, applies migrations, and runs the Playwright suite. Branch protection requires all four green before a PR can merge.
+- **`cd.yml`** — runs on the self-hosted Pi runner after CI succeeds on `main` (triggered via `workflow_run`). Pulls latest `main` into `~/Bookshelf`, rebuilds the Compose stack, waits for `/health` to respond, then prunes dangling Docker images.
+
+Repository settings enforced via GitHub UI (Settings → Branches → branch ruleset on `main`):
+
+- Pull request required before merging
+- All four CI status checks required to pass
+- Direct pushes to `main` blocked
+- Force pushes blocked
+- Squash-only merges (Settings → General → Pull Requests)
+
 ## Data model
 
 - **User** — id, email (unique), name, timestamps. Has many Books.
