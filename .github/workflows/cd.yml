@@ -1,0 +1,39 @@
+name: CD
+
+on:
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: [self-hosted, bookshelf-pi]
+    steps:
+      - name: Sync latest main
+        working-directory: /home/mpphelps/Bookshelf
+        run: |
+          git fetch origin main
+          git reset --hard origin/main
+
+      - name: Rebuild and restart stack
+        working-directory: /home/mpphelps/Bookshelf
+        run: docker compose -f docker-compose.prod.yml up -d --build
+
+      - name: Wait for app to be healthy
+        run: |
+          for i in {1..30}; do
+            if curl -fs http://localhost:3000/health > /dev/null; then
+              echo "App responded to /health"
+              exit 0
+            fi
+            echo "Waiting for app... ($i/30)"
+            sleep 2
+          done
+          echo "App did not become healthy within 60s"
+          docker compose -f docker-compose.prod.yml -p bookshelf-prod logs --tail=100 web
+          exit 1
+
+      - name: Prune old Docker images
+        run: docker image prune -f
