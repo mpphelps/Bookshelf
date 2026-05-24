@@ -78,6 +78,9 @@ export default defineConfig({
     command: "npm run dev -- --port 5174",
     url: "http://localhost:5174",
     reuseExistingServer: !process.env.CI,
+    timeout: 180_000,
+    stdout: "pipe",
+    stderr: "pipe",
     env: {
       DATABASE_URL: process.env.DATABASE_URL!,
       SESSION_SECRET: process.env.SESSION_SECRET!,
