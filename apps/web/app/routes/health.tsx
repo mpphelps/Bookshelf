@@ -1,9 +1,7 @@
-import { prisma } from "@bookshelf/database";
 import type { Route } from "./+types/health";
 
-export async function loader() {
-  const userCount = await prisma.user.count();
-  return { status: "ok", userCount };
+export function loader() {
+  return { status: "ok" };
 }
 
 export default function Health({ loaderData }: Route.ComponentProps) {
@@ -11,7 +9,6 @@ export default function Health({ loaderData }: Route.ComponentProps) {
     <div>
       <h1>Health Check</h1>
       <p>Status: {loaderData.status}</p>
-      <p>User Count: {loaderData.userCount}</p>
     </div>
   );
 }
