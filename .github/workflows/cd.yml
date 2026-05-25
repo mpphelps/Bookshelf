@@ -17,6 +17,39 @@ jobs:
           git fetch origin main
           git reset --hard origin/main
 
+      - name: Materialize .env from GitHub Secrets
+        working-directory: /home/mpphelps/Bookshelf
+        env:
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          SESSION_SECRET: ${{ secrets.SESSION_SECRET }}
+          AUTH0_DOMAIN: ${{ secrets.AUTH0_DOMAIN }}
+          AUTH0_CLIENT_ID: ${{ secrets.AUTH0_CLIENT_ID }}
+          AUTH0_CLIENT_SECRET: ${{ secrets.AUTH0_CLIENT_SECRET }}
+          AUTH0_AUDIENCE: ${{ secrets.AUTH0_AUDIENCE }}
+          AUTH0_CALLBACK_URL: ${{ secrets.AUTH0_CALLBACK_URL }}
+        run: |
+          # Refuse to write a broken .env if any secret is missing
+          for var in POSTGRES_PASSWORD SESSION_SECRET AUTH0_DOMAIN AUTH0_CLIENT_ID AUTH0_CLIENT_SECRET AUTH0_AUDIENCE AUTH0_CALLBACK_URL; do
+            if [ -z "${!var}" ]; then
+              echo "ERROR: required secret $var is missing or empty" >&2
+              exit 1
+            fi
+          done
+
+          umask 077
+          cat > packages/database/.env <<EOF
+          POSTGRES_USER=bookshelf
+          POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+          POSTGRES_DB=bookshelf
+          DATABASE_URL=postgresql://bookshelf:${POSTGRES_PASSWORD}@db:5432/bookshelf
+          SESSION_SECRET=${SESSION_SECRET}
+          AUTH0_DOMAIN=${AUTH0_DOMAIN}
+          AUTH0_CLIENT_ID=${AUTH0_CLIENT_ID}
+          AUTH0_CLIENT_SECRET=${AUTH0_CLIENT_SECRET}
+          AUTH0_AUDIENCE=${AUTH0_AUDIENCE}
+          AUTH0_CALLBACK_URL=${AUTH0_CALLBACK_URL}
+          EOF
+
       - name: Rebuild and restart stack
         working-directory: /home/mpphelps/Bookshelf
         run: docker compose -f docker-compose.prod.yml --env-file packages/database/.env up -d --build
