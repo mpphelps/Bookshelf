@@ -1,6 +1,8 @@
 # BookShelf — Project Specification
 
-A personal book tracking app built to learn Remix, Prisma, Turborepo, Vitest, and Playwright.
+A personal book tracking app built to learn React Router v7, Prisma v7, Turborepo, Playwright, Docker, and self-hosted production deployment (Raspberry Pi + Cloudflare Tunnel + GitHub Actions CI/CD).
+
+🌐 Live: **[readingbookshelf.com](https://readingbookshelf.com)** · 🛠️ Ops runbook: [`DEPLOYMENT.md`](./DEPLOYMENT.md) · 🤖 Conventions: [`CLAUDE.md`](./CLAUDE.md)
 
 ---
 
@@ -15,37 +17,48 @@ A personal book tracking app built to learn Remix, Prisma, Turborepo, Vitest, an
 ```
 bookshelf/
 ├── apps/
-│   └── web/                      ← Remix app (React + TypeScript)
+│   └── web/                            ← React Router v7 app
 │       ├── app/
-│       │   ├── routes/           ← Remix route files (thin layer)
-│       │   ├── services/         ← Business logic layer
-│       │   ├── repositories/     ← Data access layer (Prisma calls)
-│       │   ├── components/       ← Shared React components
-│       │   └── lib/              ← Utilities, types, helpers
-│       ├── tests/
-│       │   ├── unit/             ← Vitest unit tests (services, utils)
-│       │   ├── integration/      ← Vitest integration tests (repos, loaders)
-│       │   └── e2e/              ← Playwright end-to-end tests
-│       └── vitest.config.ts
+│       │   ├── routes/                 ← Route files (thin layer)
+│       │   ├── services/               ← Business logic layer
+│       │   ├── repositories/           ← Data access layer (Prisma calls)
+│       │   ├── components/             ← Layout primitives, book-specific UI
+│       │   └── lib/                    ← Utilities, types, helpers
+│       ├── e2e/                        ← Playwright end-to-end tests
+│       │   ├── specs/
+│       │   ├── test-fixtures.ts
+│       │   └── global-setup.ts
+│       └── playwright.config.ts
 ├── packages/
-│   └── database/                 ← Shared Prisma package
-│       ├── prisma/
-│       │   ├── schema.prisma
-│       │   └── migrations/       ← Migration history
-│       ├── src/
-│       │   └── client.ts         ← Prisma client singleton export
-│       └── package.json
+│   ├── database/                       ← Shared Prisma package
+│   │   ├── prisma/
+│   │   │   ├── schema.prisma
+│   │   │   └── migrations/             ← Migration history
+│   │   ├── src/client.ts               ← Prisma client singleton export
+│   │   └── prisma.config.ts            ← Prisma v7 datasource URL config
+│   ├── ui/                             ← Shared React components (Button, Input, etc. via CVA)
+│   ├── eslint-config/                  ← Shared ESLint flat config
+│   └── typescript-config/              ← Shared tsconfig.json bases
+├── .github/workflows/
+│   ├── ci.yml                          ← Lint, check-types, build, e2e on hosted Ubuntu
+│   └── cd.yml                          ← Deploy to Pi via self-hosted runner
+├── scripts/
+│   └── backup.sh                       ← Nightly Postgres backup (deployed to Pi)
+├── Dockerfile                          ← Multi-stage prod build
+├── docker-entrypoint.sh                ← Runs prisma migrate deploy, then react-router-serve
+├── docker-compose.yml                  ← Dev: Postgres only
+├── docker-compose.prod.yml             ← Prod: app + Postgres (project: bookshelf-prod)
 ├── turbo.json
-├── package.json
-├── .gitignore
-└── PROJECT_SPEC.md
+├── DEPLOYMENT.md                       ← Full deployment + ops runbook
+├── CLAUDE.md                           ← Architectural conventions
+└── PROJECT_SPEC.md                     ← This file
 ```
 
 ---
 
 ## 3. Backend Architecture (Layered)
 
-### 3a. Route Layer (Remix loaders & actions)
+### 3a. Route Layer (`app/routes/`)
 
 - **Responsibility:** Parse request params/form data, call the appropriate service, return Response/json.
 - **Rules:**
@@ -55,12 +68,13 @@ bookshelf/
 
 ### 3b. Service Layer (`app/services/`)
 
-- **Responsibility:** Business logic, validation, orchestration.
+- **Responsibility:** Business logic, validation, orchestration, ownership/permission checks.
 - **Rules:**
   - Receives plain data (not Request objects).
   - Calls one or more repositories.
-  - Throws domain-specific errors (e.g., `BookNotFoundError`).
+  - Throws domain-specific errors (e.g., `BookNotFoundError`, `ForbiddenError`).
   - This is where rules like "you can only rate a book on the Finished shelf" live.
+  - Cross-entity composition happens here (e.g., `getNoteForUser` composes `getBookForUser`).
 
 ### 3c. Repository Layer (`app/repositories/`)
 
@@ -70,14 +84,16 @@ bookshelf/
   - No business logic or validation.
   - Returns Prisma types or `null`.
   - Never throws business errors — only data errors.
+  - **No cross-entity `include`s** — composition is the service layer's job.
 
 ### Example flow for "Move a book to the Finished shelf":
 
 ```
 Route action (parses formData: bookId, shelf)
-  → bookService.moveToShelf(bookId, shelf)
-    → validates shelf transition is allowed
-    → bookRepository.updateShelf(bookId, shelf)
+  → bookService.moveToShelf(user, bookId, shelf)
+    → bookService.getBookForUser(user, bookId)  ← ownership gate
+    → validates shelf transition
+    → bookRepository.update(bookId, { shelf })
       → prisma.book.update(...)
 ```
 
@@ -85,7 +101,7 @@ Route action (parses formData: bookId, shelf)
 
 ## 4. Data Model (Prisma)
 
-### Phase 1 — Initial Schema
+### Current schema
 
 ```
 User
@@ -106,13 +122,13 @@ Book
   - user        User     @relation(fields: [userId], references: [id])
   - createdAt   DateTime @default(now())
   - updatedAt   DateTime @updatedAt
-  - notes       Note[]
+  - notes       Note[]   (onDelete: Cascade)
 
 Note
   - id          String   @id @default(cuid())
   - content     String
   - bookId      String
-  - book        Book     @relation(fields: [bookId], references: [id])
+  - book        Book     @relation(fields: [bookId], references: [id], onDelete: Cascade)
   - createdAt   DateTime @default(now())
   - updatedAt   DateTime @updatedAt
 
@@ -123,27 +139,7 @@ enum Shelf {
 }
 ```
 
-### Phase 2 — Migration Exercises (introduced after Phase 1 is working)
-
-Each exercise teaches a different migration skill:
-
-| #   | Change                                                                         | Skill Learned                                                                                                                  |
-| --- | ------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------ |
-| M1  | Add `coverImageUrl` (optional) column to Book                                  | Safe column addition — nullable columns don't break existing rows                                                              |
-| M2  | Add `genre` column (required) with backfill                                    | Adding a required column to a table with existing data — must provide a default or backfill                                    |
-| M3  | Split `author` string into a separate `Author` table with relation             | Structural migration — create table, backfill from existing data, update references, drop old column (expand/contract pattern) |
-| M4  | Add `startedAt` and `finishedAt` timestamps to Book, backfill from `updatedAt` | Data migration — writing a migration script that transforms existing data                                                      |
-| M5  | Rename `content` to `body` on Note                                             | Column rename — Prisma handles this as drop+create by default, learn to override with raw SQL rename                           |
-
-**Teaching approach for each migration:**
-
-1. Explain what the change is and why it's tricky
-2. Show what Prisma generates by default (`prisma migrate dev --create-only`)
-3. Inspect the generated SQL together
-4. Discuss: "What happens to existing rows?"
-5. Modify the migration SQL if needed (add backfills, defaults, etc.)
-6. Apply the migration
-7. Verify data integrity
+Planned schema evolution is exercised in **Build Phase 4** (Migration Exercises) — see §8.
 
 ---
 
@@ -151,29 +147,31 @@ Each exercise teaches a different migration skill:
 
 ### Pages
 
-| Route                      | Description                                        | Remix Concepts                    |
-| -------------------------- | -------------------------------------------------- | --------------------------------- |
-| `/`                        | Landing / redirect to `/shelves`                   | Root loader                       |
-| `/auth/login`              | Redirects to Auth0 login                           | OAuth 2.0 redirect                |
-| `/auth/callback`           | Auth0 callback — validates tokens, creates session | OAuth callback, session cookies   |
-| `/auth/logout`             | Clears session, redirects to Auth0 logout          | Session destruction               |
-| `/shelves`                 | Dashboard showing all 3 shelves with book counts   | Loader with DB query              |
-| `/shelves/$shelf`          | Filtered view of one shelf                         | Dynamic route params, loader      |
-| `/books/new`               | Add a book form                                    | Action, form validation, redirect |
-| `/books/$bookId`           | Book detail — see notes, rating, change shelf      | Nested loader, multiple actions   |
-| `/books/$bookId/notes`     | Notes list for a book                              | Nested route, outlet              |
-| `/books/$bookId/notes/new` | Add a note                                         | Action, form                      |
+| Route                                    | Description                                                        | Notes                              |
+| ---------------------------------------- | ------------------------------------------------------------------ | ---------------------------------- |
+| `/`                                      | Landing / redirect to `/shelves`                                   | Root loader                        |
+| `/auth/login`                            | Redirects to Auth0 authorize URL                                   | OAuth 2.0 redirect                 |
+| `/auth/callback`                         | Auth0 callback — validates code, creates session                   | OAuth callback                     |
+| `/auth/logout`                           | Clears session, redirects to Auth0 logout                          | Session destruction                |
+| `/auth/test-login`                       | Test-only bypass; gated by `E2E_AUTH_BYPASS=1`                     | E2E auth                           |
+| `/health`                                | Shallow liveness probe (no DB query); used by Playwright + Pi CD   | 200 OK + plain HTML                |
+| `/shelves`                               | Dashboard — three shelf tiles with book counts                     | Loader with DB query               |
+| `/shelves/$shelf`                        | Filtered view of one shelf                                         | Dynamic route params               |
+| `/books/new`                             | Add a book (route modal)                                           | Action, form validation, redirect  |
+| `/books/$bookId`                         | Book detail — notes inline, rating, shelf change, delete           | Multi-intent action (`intent=...`) |
+| `/books/$bookId/notes/new`               | Add a note (route modal)                                           | Reuses `NoteFormModal`             |
+| `/books/$bookId/notes/$noteId/edit`      | Edit a note (route modal)                                          | Reuses `NoteFormModal`             |
 
-### Key Remix Concepts Covered
+### Key React Router v7 concepts covered
 
-- Loaders (server-side data fetching)
-- Actions (form mutations)
+- Loaders (server-side data fetching) and Actions (form mutations)
+- Typed routes via `Route.LoaderArgs` / `Route.ComponentProps`
 - Nested routing & Outlets
 - Dynamic route params (`$bookId`, `$shelf`)
-- Error boundaries & catch boundaries
-- Session management (cookies)
-- Form component & progressive enhancement
-- useLoaderData, useActionData, useNavigation
+- Modal-as-route pattern (Radix `Dialog` wrapped in `RouteModal`)
+- Error boundaries
+- Session management (encrypted HTTP-only cookies)
+- Multi-intent actions via hidden `intent` field
 
 ---
 
@@ -184,9 +182,9 @@ Each exercise teaches a different migration skill:
 - Auth0 handles login/signup UI, password storage, social login
 - OAuth 2.0 Authorization Code flow with PKCE
 - On successful login, Auth0 returns a JWT (id_token + access_token)
-- Server stores the JWT in an encrypted HTTP-only session cookie
-- Browser never sees the raw JWT — no XSS risk
+- Server stores the JWT in an encrypted HTTP-only session cookie — browser never sees the raw JWT (no XSS risk)
 - On first login, a User record is created in our DB (synced from Auth0 profile)
+- **Behind TLS-terminating proxy (Cloudflare Tunnel):** `redirect_uri` is sourced from `AUTH0_CALLBACK_URL` env var, never derived from `request.url` (which reports `http://` because cloudflared terminates TLS at the edge)
 
 ### Authorization (JWT-based)
 
@@ -195,7 +193,7 @@ Each exercise teaches a different migration skill:
 - Roles: `admin` (full access), `user` (read/write own data)
 - Authorization checks happen in the service layer, not routes
 
-### Auth Flow
+### Auth flow
 
 ```
 Browser → /auth/login → redirect to Auth0
@@ -204,33 +202,32 @@ Auth0 → user logs in → redirect to /auth/callback
 Subsequent requests → loader reads cookie → validates JWT → extracts user + permissions
 ```
 
+### E2E auth bypass
+
+- `E2E_AUTH_BYPASS=1` env var enables two test-only paths:
+  - `/auth/test-login` accepts a POST and sets a test session cookie (404 in production)
+  - `getAuthenticatedUser` short-circuits JWT validation and reads the test cookie instead
+- Playwright `page` fixture POSTs to `/auth/test-login` before each test that declares `test.use({ user: ... })`
+- Bypass is never enabled in production; gated by env var
+
 ---
 
 ## 7. Testing Strategy
 
-### Vitest — Unit Tests (`tests/unit/`)
+### Playwright — E2E (`apps/web/e2e/`)
 
-- Service layer functions (business logic)
-- Utility/helper functions
-- Mock the repository layer using vi.mock
+Primary test strategy. End-to-end coverage exercises routes, services, and repositories together — the entire stack.
 
-### Vitest — Integration Tests (`tests/integration/`)
+- Runs against a dedicated `bookshelf_test` database, port 5174 isolated from dev
+- `globalSetup` runs `prisma migrate deploy` before the suite
+- `cleanDb` fixture truncates `User`, `Book`, `Note` between tests for isolation
+- Suite-level auth via `test.use({ user: ... })` + `page` fixture override
+- Webserver probe uses `/health` (no DB query) to avoid race against migrations
+- CI runs the same suite against an ephemeral Postgres service container
 
-- Repository functions against a real test database
-- Loader/action functions with real DB
-- Use a test database + migrate before suite, truncate between tests
+### Vitest — deferred
 
-### Playwright — E2E Tests (`e2e/`)
-
-- Separate `e2e` folder at the `apps/web` level
-- Runs against a dedicated `bookshelf_test` database (not dev or prod)
-- Separate Docker service or same Postgres instance with a different DB name
-- Migrations applied before test suite runs
-- Database truncated between tests for isolation
-- Full user flows in a real browser:
-  - Sign in → Add a book → Move through shelves → Rate → Add notes
-  - Error states (missing fields, invalid data)
-- Auth0 testing: use Auth0 test credentials or bypass auth in test environment
+Originally planned for service and repository unit/integration tests; E2E coverage proved sufficient. Will revisit if specific business logic grows complex enough to warrant isolated unit testing.
 
 ---
 
@@ -277,43 +274,40 @@ Round out update/delete patterns missed in initial Phase 2.
 
 Note service introduces `getNoteForUser` (Note → Book → User), which composes `getBookForUser` — single ownership gate reused by update + delete. Repos stay single-table.
 
-### Phase 3b: Production Deployment (Pi 5 self-host)
+### Phase 3: Unit & Integration Testing (deferred indefinitely)
 
-Stand up a real public-facing environment on a home Raspberry Pi 5 so Phase 4 migration exercises also teach prod-migration practice. AWS rejected on cost — target spend ~$1-2/mo (just domain).
+E2E coverage from Phase 2 considered sufficient — service/repo layers are exercised end-to-end through the route layer. Revisit only if specific business logic grows complex enough to warrant isolated unit testing.
 
-**Architecture:** Pi 5 runs `docker compose` with `app` (RR7 + Prisma) + `postgres` (volume on SSD). Cloudflare Tunnel exposes the app at `bookshelf.<domain>`. Self-hosted GitHub Actions runner on the Pi handles deploy; hosted runners handle lint/build/e2e.
+### Phase 3b: Production Deployment (Pi 5 self-host) ✅
 
-Setup tasks:
+Live public-facing environment on a home Raspberry Pi 5 so Phase 4 migration exercises also teach prod-migration practice. AWS rejected on cost — actual spend ~$1-2/mo (domain + electricity).
 
-- [ ] Register domain (Cloudflare Registrar)
-- [ ] Install Docker + Docker Compose on Pi
-- [ ] (If SD-card only) get an external SSD for Postgres volume
-- [ ] Verify local production build (`npm run build`, `npm run start`)
-- [ ] Fix `turbo.json` build output globs (`.next/**` → `build/**`)
-- [ ] Rewrite Dockerfile for monorepo + `prisma generate`
-- [ ] Container entrypoint runs `prisma migrate deploy` before `react-router-serve`
-- [ ] `docker-compose.yml` with `app` + `postgres` services + named volume on SSD path
-- [ ] Get stack running locally on Pi (manual `docker compose up`)
-- [ ] Cloudflare Tunnel: install `cloudflared`, create tunnel, route DNS to it
-- [ ] Self-hosted GitHub Actions runner installed + registered to the repo on the Pi
-- [ ] CI workflow (hosted runner): lint, build, e2e against ephemeral Postgres
-- [ ] CD workflow (self-hosted runner): on success → `git pull`, `docker compose build`, `prisma migrate deploy`, `docker compose up -d`
-- [ ] Auth0 prod callback URL added (`https://bookshelf.<domain>/auth/callback`)
-- [ ] `SESSION_SECRET` + Auth0 envs set as GHA secrets, passed to container at runtime
-- [ ] Nightly `pg_dump` cron + off-site upload (Backblaze B2 free tier)
-- [ ] Smoke test live app: login → add book → move shelf → add/edit/delete note → delete book
+**Architecture:** Pi 5 (8GB) runs `docker compose` with `app` (RR7 + Prisma) + `postgres` (named volume). Cloudflare Tunnel exposes the app at `readingbookshelf.com`. Self-hosted GitHub Actions runner on the Pi handles deploy; hosted runners handle CI.
 
-### Phase 3: Unit & Integration Testing (deferred)
+- [x] Register domain (Cloudflare Registrar) — `readingbookshelf.com`
+- [x] Install Docker + Docker Compose on Pi
+- [x] Verify local production build (`npm run build`)
+- [x] Fix `turbo.json` build output globs (`build/**`)
+- [x] Multi-stage Dockerfile for monorepo + `prisma generate` in build stage
+- [x] Container entrypoint runs `prisma migrate deploy` before `react-router-serve`
+- [x] `docker-compose.prod.yml` with `app` + `postgres` services + named `pgdata_prod` volume
+- [x] Get stack running on Pi (manual `docker compose up`)
+- [x] Cloudflare Tunnel: `cloudflared` installed + systemd-managed, tunnel `bookshelf` routes apex + www
+- [x] Auth0 prod callback URLs added; app refactored to use `AUTH0_CALLBACK_URL` env var (not `request.url`)
+- [x] Self-hosted GitHub Actions runner on Pi, systemd-managed
+- [x] CI workflow (hosted runner): lint, check-types, build, e2e against Postgres service container
+- [x] CD workflow (self-hosted runner): on workflow_run success → git reset, materialize `.env` from GH Secrets, docker compose up -d --build, curl `/health`
+- [x] Branch protection on `main`: PR required, all 4 CI checks required, force-push blocked, squash-only merges
+- [x] All prod secrets migrated to GitHub Actions repository secrets; `.env` materialized by CD on every deploy with `chmod 600`
+- [x] Nightly `pg_dump -Fc` → rclone crypt overlay → Backblaze B2; 7-day local + 30-day off-site retention; healthchecks.io alerts on miss
+- [x] Restore drill verified (throwaway Postgres + pg_restore + data-parity check)
+- [x] Smoke test live app golden path (login → CRUD on book + note → logout)
 
-E2E coverage from Phase 2 considered sufficient — service/repo layers are exercised end-to-end through the route layer. Revisit if specific business logic grows complex enough to warrant isolated unit testing.
+Full step-by-step runbook in [`DEPLOYMENT.md`](./DEPLOYMENT.md).
 
-- [ ] Set up Vitest config
-- [ ] Write unit tests for service layer
-- [ ] Write integration tests for repositories
+### Phase 4: Migration Exercises (next)
 
-### Phase 4: Migration Exercises
-
-Pattern matters; suggested payloads chosen to unlock Phase 6 features.
+Pattern matters; suggested payloads chosen to unlock Phase 6 features. Each migration now flows dev → CI → prod via the full pipeline, so exercises teach the complete deploy cadence (including the nightly backup that captures pre/post state).
 
 - [ ] M1: Add optional column — suggested `Book.genre String?` (unlocks 6.2)
 - [ ] M2: Add required column with backfill — suggested `Book.priority Int` per-shelf (unlocks 6.3)
@@ -321,31 +315,46 @@ Pattern matters; suggested payloads chosen to unlock Phase 6 features.
 - [ ] M4: Data backfill — suggested: normalize `Book.author` casing
 - [ ] M5: Column rename without data loss — suggested: `Note.content` → `Note.body`
 
+**Per-migration teaching loop:**
+
+1. Edit `schema.prisma`
+2. `npx prisma migrate dev --create-only` — generates SQL without applying
+3. Inspect the SQL: what gets locked? what happens to existing rows? what's the backfill order?
+4. `npx prisma migrate dev` — applies to dev
+5. Open PR; CI runs migration against ephemeral Postgres in the e2e job
+6. Squash-merge; CD runs `migrate deploy` against prod via the Docker entrypoint
+7. Nightly backup captures the new schema state
+
 ### Phase 5: Polish & Advanced
 
 - [ ] Error boundaries (root-level, not just per-route)
-- [ ] Optimistic UI with useNavigation / useFetcher pending states
-- [ ] Turbo pipeline configuration (build/test/lint)
-- [ ] CI-ready scripts
+- [ ] Optimistic UI with `useNavigation` / `useFetcher` pending states
+- [ ] SEO: meta tags, Open Graph, sitemap, robots.txt — app is public + search-discoverable
+- [ ] Performance pass: bundle analysis, image optimization for book covers
 
 ### Phase 6: Feature Enhancements
 
 - [ ] 6.1: Open Library API — search-first add-book modal (auto-fill title/author/cover from `openlibrary.org/search.json`); manual entry remains as fallback. Independent of Phase 4.
 - [ ] 6.2: Sort books on a shelf — URL state `?sort=title|author|genre|recent`; genre option requires Phase 4 M1.
 - [ ] 6.3: Drag-and-drop priority reordering within a shelf via `@dnd-kit/sortable`; requires Phase 4 M2 (`Book.priority`).
-- [ ] 6.4: Ability add a friend and see to see your friend's shelves
-- [ ] 6.5: Add redis caching for getting friends updated lists
+- [ ] 6.4: Add a friend; view your friend's shelves
+- [ ] 6.5: Redis caching for friends' shelves
 
 ---
 
 ## 9. Tech Versions
 
-- Node.js: 24.7.0
-- npm: 11.3.0
-- Turborepo: 2.9.3
-- React Router: 7.13.2
-- Prisma: 7.6.0
-- PostgreSQL: 17 (Docker)
-- Auth0: jsonwebtoken ^9.0.3 + jwks-rsa ^4.0.1
-- Vitest: TBD (Phase 3)
-- Playwright: ^1.59.1
+- Node.js ≥ 20
+- npm 11.3.0
+- Turborepo 2.9.3
+- React Router 7.13.2 + React 19.2.4 + TypeScript 5.9
+- Vite 7
+- Tailwind CSS 4.2
+- Prisma 7.6 (with `@prisma/adapter-pg` driver adapter)
+- PostgreSQL 17 (Docker, official image)
+- Auth0: `jsonwebtoken` ^9.0.3 + `jwks-rsa` ^4.0.1
+- Playwright ^1.59.1 (Chromium only)
+- ESLint 9 (flat config) — shared via `@repo/eslint-config`
+- Docker + Docker Compose v2 (Compose Spec)
+- Cloudflare Tunnel (`cloudflared`)
+- rclone (B2 backend + crypt overlay) — for off-site backups
