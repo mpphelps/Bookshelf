@@ -19,7 +19,7 @@ jobs:
 
       - name: Rebuild and restart stack
         working-directory: /home/mpphelps/Bookshelf
-        run: docker compose -f docker-compose.prod.yml up -d --build
+        run: docker compose -f docker-compose.prod.yml --env-file packages/database/.env up -d --build
 
       - name: Wait for app to be healthy
         run: |
@@ -32,7 +32,7 @@ jobs:
             sleep 2
           done
           echo "App did not become healthy within 60s"
-          docker compose -f docker-compose.prod.yml -p bookshelf-prod logs --tail=100 web
+          docker compose -f docker-compose.prod.yml -p bookshelf-prod logs --tail=100 app
           exit 1
 
       - name: Prune old Docker images
