@@ -33,9 +33,9 @@ const SHELF_STATUS: Record<ShelfKey, ShelfStatusMeta> = {
 };
 
 const EMPTY_ART = `╭───────────────────────────────────╮
-│                                   │
-│   ◌  NO  TRANSMISSION  RECEIVED   │
-│                                   │
+                                   
+   ◌  NO  TRANSMISSION  RECEIVED   
+                                   
 ╰───────────────────────────────────╯`;
 
 export async function loader({ request, params }: Route.LoaderArgs) {
@@ -91,8 +91,7 @@ export default function ShelfRoute({ loaderData }: Route.ComponentProps) {
         <ManifestHeader
           channel={
             <>
-              shelf manifest /{" "}
-              <span className="text-foreground/80">ch.{channelId}</span>
+              shelf manifest / <span className="text-foreground/80">ch.{channelId}</span>
             </>
           }
           heading={
@@ -100,9 +99,7 @@ export default function ShelfRoute({ loaderData }: Route.ComponentProps) {
               {shelfLabel}.
               <br />
               <span className="text-primary tabular-nums">{formatCount(books.length)}</span>{" "}
-              <span className="text-muted-foreground text-2xl md:text-3xl">
-                {books.length === 1 ? "volume filed." : "volumes filed."}
-              </span>
+              <span className="text-muted-foreground text-2xl md:text-3xl">{books.length === 1 ? "volume filed." : "volumes filed."}</span>
             </>
           }
           aside={
@@ -110,15 +107,7 @@ export default function ShelfRoute({ loaderData }: Route.ComponentProps) {
               <StatReadout label="status" valueTone={status.tone === "muted" ? "muted" : status.tone}>
                 <span className="flex md:justify-end items-center gap-2">
                   <StatusIndicator tone={status.tone} pulsing={status.pulsing}>
-                    <MicroLabel
-                      tone={
-                        status.tone === "primary"
-                          ? "primary"
-                          : status.tone === "accent"
-                            ? "accent"
-                            : "default"
-                      }
-                    >
+                    <MicroLabel tone={status.tone === "primary" ? "primary" : status.tone === "accent" ? "accent" : "default"}>
                       {status.label}
                     </MicroLabel>
                   </StatusIndicator>
@@ -130,11 +119,7 @@ export default function ShelfRoute({ loaderData }: Route.ComponentProps) {
         />
 
         <div className="mb-6 flex items-center justify-between gap-4">
-          <BracketDivider
-            className="flex-1"
-            label="entries"
-            trailing={`${formatCount(books.length)} records`}
-          />
+          <BracketDivider className="flex-1" label="entries" trailing={`${formatCount(books.length)} records`} />
           <Button variant="outline" size="sm" asChild>
             <Link to="/books/new" className="display !text-[10px]">
               + NEW ENTRY
@@ -159,13 +144,7 @@ export default function ShelfRoute({ loaderData }: Route.ComponentProps) {
           <ol className="grid grid-cols-1 gap-3">
             {books.map((book, idx) => (
               <li key={book.id}>
-                <BookListItem
-                  to={`/books/${book.id}`}
-                  slotIndex={idx}
-                  title={book.title}
-                  author={book.author}
-                  rating={book.rating}
-                />
+                <BookListItem to={`/books/${book.id}`} slotIndex={idx} title={book.title} author={book.author} rating={book.rating} />
               </li>
             ))}
           </ol>

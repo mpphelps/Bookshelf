@@ -656,6 +656,44 @@ Repository settings enforced via GitHub UI (Settings → Branches → branch rul
 - Force pushes blocked
 - Squash-only merges (Settings → General → Pull Requests)
 
+### Secret management
+
+Production secrets are **not stored in any file checked into the repo**, and **not edited by hand on the Pi**. They live in GitHub Actions repository secrets, and the CD workflow materializes `~/Bookshelf/packages/database/.env` on the Pi at deploy time from those secrets.
+
+Stored as GitHub Secrets (Settings → Secrets and variables → Actions):
+
+| Secret | What |
+|---|---|
+| `POSTGRES_PASSWORD` | DB user password (rotate via `ALTER ROLE` + secret update + redeploy) |
+| `SESSION_SECRET` | Encrypts the session cookie |
+| `AUTH0_DOMAIN` | Your Auth0 tenant hostname |
+| `AUTH0_CLIENT_ID` | Auth0 app client ID |
+| `AUTH0_CLIENT_SECRET` | Auth0 app client secret |
+| `AUTH0_AUDIENCE` | Auth0 API audience identifier |
+| `AUTH0_CALLBACK_URL` | `https://<your-domain>/auth/callback` |
+
+Non-secret constants (`POSTGRES_USER=bookshelf`, `POSTGRES_DB=bookshelf`) are hardcoded in the workflow YAML. `DATABASE_URL` is derived in the workflow from `POSTGRES_PASSWORD` — never stored independently, so the two can't drift.
+
+The CD step that writes `.env` (`Materialize .env from GitHub Secrets` in `cd.yml`) does three things:
+
+1. **Sanity-check that every required secret is non-empty** — fails the deploy fast if any are missing, rather than silently writing a broken `.env` that crashes the app
+2. **`umask 077`** before writing — `.env` ends up `chmod 600` (owner-only readable)
+3. **Writes the file fresh on every deploy** — the Pi's `.env` is overwritten every time, so any manual edit on the Pi is non-persistent. GitHub is the only source of truth.
+
+To rotate a secret:
+
+1. Update the value in GitHub UI (Settings → Secrets → click → Update value)
+2. If it's `POSTGRES_PASSWORD`: also run `ALTER ROLE bookshelf WITH PASSWORD '<new>'` against the live DB (the workflow can't do this for you because the secret isn't visible after rotation)
+3. Trigger a deploy (push any commit to main, or use "Run workflow" on CD with `workflow_dispatch`)
+4. New `.env` written, app restarted with new credentials
+
+To add a new env var the app needs:
+
+1. Add it as a GitHub Secret
+2. Add it to the `env:` block + the heredoc in `cd.yml`'s "Materialize .env" step
+3. Add to the sanity-check loop in the same step
+4. Push, deploy
+
 ## Data model
 
 - **User** — id, email (unique), name, timestamps. Has many Books.
