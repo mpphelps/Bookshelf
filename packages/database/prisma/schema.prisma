@@ -27,6 +27,7 @@ model Book {
   title     String
   author    String
   genre     String?
+  isFavorite Boolean   @default(false)
   shelf     Shelf     @default(WANT_TO_READ)
   rating    Int?
   userId    String
