@@ -26,6 +26,7 @@ model Book {
   id        String    @id @default(cuid())
   title     String
   author    String
+  genre     String?
   shelf     Shelf     @default(WANT_TO_READ)
   rating    Int?
   userId    String
