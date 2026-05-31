@@ -43,6 +43,7 @@ export async function createBook(user: AuthUser, input: { title: string; author:
   const errors: Record<string, string> = {};
   const title = input.title.trim();
   const author = input.author.trim();
+  const authors = [author];
 
   if (title.length === 0) errors.title = "Title is required";
   if (author.length === 0) errors.author = "Author is required";
@@ -58,6 +59,7 @@ export async function createBook(user: AuthUser, input: { title: string; author:
     userId: user.id,
     title,
     author,
+    authors,
     shelf: input.shelf as ShelfKey,
   });
 }
@@ -66,7 +68,7 @@ export async function updateBook(user: AuthUser, bookId: string, input: { title?
   const book = await getBookForUser(user, bookId);
 
   const errors: Record<string, string> = {};
-  const data: { title?: string; author?: string; shelf?: ShelfKey } = {};
+  const data: { title?: string; author?: string; authors?: string[]; shelf?: ShelfKey } = {};
 
   if (input.title !== undefined) {
     const title = input.title.trim();
@@ -77,7 +79,10 @@ export async function updateBook(user: AuthUser, bookId: string, input: { title?
   if (input.author !== undefined) {
     const author = input.author.trim();
     if (author.length === 0) errors.author = "Author cannot be empty";
-    else data.author = author;
+    else {
+      data.author = author;
+      data.authors = [author];
+    }
   }
 
   if (input.shelf !== undefined) {
