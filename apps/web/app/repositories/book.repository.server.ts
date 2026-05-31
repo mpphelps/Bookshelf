@@ -24,13 +24,13 @@ export const bookRepository = {
     });
   },
 
-  async create(data: { userId: string; title: string; author: string; shelf: Shelf }) {
+  async create(data: { userId: string; title: string; author: string; authors: string[]; shelf: Shelf }) {
     return prisma.book.create({
       data,
     });
   },
 
-  async update(bookId: string, data: { title?: string; author?: string; shelf?: Shelf; rating?: number }) {
+  async update(bookId: string, data: { title?: string; author?: string; authors?: string[]; shelf?: Shelf; rating?: number }) {
     return prisma.book.update({
       where: { id: bookId },
       data,
