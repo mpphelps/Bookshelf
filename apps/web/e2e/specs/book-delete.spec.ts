@@ -2,15 +2,14 @@ import { expect } from "@playwright/test";
 import { prisma } from "@bookshelf/database";
 import { test } from "../test-fixtures";
 import { BookDetailPage } from "../page-object-models/book-detail-page";
+import { createBook } from "../utilities/utilities";
 
 test.describe("book delete — owner", () => {
   test.use({ user: { email: "test@example.com", name: "Test User" } });
 
   test("deletes the book, cascade-removes notes, and redirects to its shelf", async ({ page }) => {
     const user = await prisma.user.findUniqueOrThrow({ where: { email: "test@example.com" } });
-    const book = await prisma.book.create({
-      data: { userId: user.id, title: "Dune", author: "Frank Herbert", shelf: "READING" },
-    });
+    const book = await createBook(user.id);
     await prisma.note.createMany({
       data: [
         { bookId: book.id, content: "first note" },
@@ -33,9 +32,7 @@ test.describe("book delete — owner", () => {
 
   test("redirects to the correct shelf based on the book's current shelf", async ({ page }) => {
     const user = await prisma.user.findUniqueOrThrow({ where: { email: "test@example.com" } });
-    const book = await prisma.book.create({
-      data: { userId: user.id, title: "Dune", author: "Frank Herbert", shelf: "FINISHED" },
-    });
+    const book = await createBook(user.id, { shelf: "FINISHED" });
 
     const detail = new BookDetailPage(page, book.id);
     await detail.goTo();
@@ -52,9 +49,7 @@ test.describe("book delete — non-owner", () => {
     const owner = await prisma.user.create({
       data: { email: "owner@example.com", name: "Owner" },
     });
-    const book = await prisma.book.create({
-      data: { userId: owner.id, title: "Forbidden Book", author: "Owner", shelf: "READING" },
-    });
+    const book = await createBook(owner.id, { title: "Forbidden Book", author: "Owner" });
     await prisma.note.create({ data: { bookId: book.id, content: "secret" } });
 
     // Bypass UI: POST directly to the action as the viewer

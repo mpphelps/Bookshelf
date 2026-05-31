@@ -3,15 +3,14 @@ import { prisma } from "@bookshelf/database";
 import { test } from "../test-fixtures";
 import { BookDetailPage } from "../page-object-models/book-detail-page";
 import { EditNotePage } from "../page-object-models/edit-note-page";
+import { createBook } from "../utilities/utilities";
 
 test.describe("notes edit — owner", () => {
   test.use({ user: { email: "test@example.com", name: "Test User" } });
 
   test("pre-fills the form with current content and saves an update", async ({ page }) => {
     const user = await prisma.user.findUniqueOrThrow({ where: { email: "test@example.com" } });
-    const book = await prisma.book.create({
-      data: { userId: user.id, title: "Dune", author: "Frank Herbert", shelf: "READING" },
-    });
+    const book = await createBook(user.id);
     const note = await prisma.note.create({
       data: { bookId: book.id, content: "original content" },
     });
@@ -32,9 +31,7 @@ test.describe("notes edit — owner", () => {
 
   test("rejects empty note content", async ({ page }) => {
     const user = await prisma.user.findUniqueOrThrow({ where: { email: "test@example.com" } });
-    const book = await prisma.book.create({
-      data: { userId: user.id, title: "Dune", author: "Frank Herbert", shelf: "READING" },
-    });
+    const book = await createBook(user.id);
     const note = await prisma.note.create({
       data: { bookId: book.id, content: "original content" },
     });
@@ -52,9 +49,7 @@ test.describe("notes edit — owner", () => {
 
   test("returns 404 when the note does not exist", async ({ page }) => {
     const user = await prisma.user.findUniqueOrThrow({ where: { email: "test@example.com" } });
-    const book = await prisma.book.create({
-      data: { userId: user.id, title: "Dune", author: "Frank Herbert", shelf: "READING" },
-    });
+    const book = await createBook(user.id);
 
     const edit = new EditNotePage(page, book.id, "nonexistent-note-id");
     await edit.goTo();
@@ -69,9 +64,7 @@ test.describe("notes edit — non-owner", () => {
     const owner = await prisma.user.create({
       data: { email: "owner@example.com", name: "Owner" },
     });
-    const book = await prisma.book.create({
-      data: { userId: owner.id, title: "Forbidden Book", author: "Owner", shelf: "READING" },
-    });
+    const book = await createBook(owner.id, { title: "Forbidden Book", author: "Owner" });
     const note = await prisma.note.create({
       data: { bookId: book.id, content: "owner's secret note" },
     });
@@ -85,9 +78,7 @@ test.describe("notes edit — non-owner", () => {
     const owner = await prisma.user.create({
       data: { email: "owner@example.com", name: "Owner" },
     });
-    const book = await prisma.book.create({
-      data: { userId: owner.id, title: "Forbidden Book", author: "Owner", shelf: "READING" },
-    });
+    const book = await createBook(owner.id, { title: "Forbidden Book", author: "Owner" });
     const note = await prisma.note.create({
       data: { bookId: book.id, content: "original secret" },
     });

@@ -3,15 +3,14 @@ import { prisma } from "@bookshelf/database";
 import { test } from "../test-fixtures";
 import { BookDetailPage } from "../page-object-models/book-detail-page";
 import { NewNotePage } from "../page-object-models/new-note-page";
+import { createBook } from "../utilities/utilities";
 
 test.describe("notes — owner", () => {
   test.use({ user: { email: "test@example.com", name: "Test User" } });
 
   test("shows empty state when book has no notes", async ({ page }) => {
     const user = await prisma.user.findUniqueOrThrow({ where: { email: "test@example.com" } });
-    const book = await prisma.book.create({
-      data: { userId: user.id, title: "Dune", author: "Frank Herbert", shelf: "READING" },
-    });
+    const book = await createBook(user.id);
 
     const detail = new BookDetailPage(page, book.id);
     await detail.goTo();
@@ -20,9 +19,7 @@ test.describe("notes — owner", () => {
 
   test("creates a note via the modal and shows it inline", async ({ page }) => {
     const user = await prisma.user.findUniqueOrThrow({ where: { email: "test@example.com" } });
-    const book = await prisma.book.create({
-      data: { userId: user.id, title: "Dune", author: "Frank Herbert", shelf: "READING" },
-    });
+    const book = await createBook(user.id);
 
     const newNote = new NewNotePage(page, book.id);
     await newNote.goTo();
@@ -34,9 +31,7 @@ test.describe("notes — owner", () => {
 
   test("lists notes with newest first", async ({ page }) => {
     const user = await prisma.user.findUniqueOrThrow({ where: { email: "test@example.com" } });
-    const book = await prisma.book.create({
-      data: { userId: user.id, title: "Dune", author: "Frank Herbert", shelf: "READING" },
-    });
+    const book = await createBook(user.id);
     await prisma.note.create({
       data: { bookId: book.id, content: "older", createdAt: new Date(Date.now() - 60_000) },
     });
@@ -51,9 +46,7 @@ test.describe("notes — owner", () => {
 
   test("rejects empty note content", async ({ page }) => {
     const user = await prisma.user.findUniqueOrThrow({ where: { email: "test@example.com" } });
-    const book = await prisma.book.create({
-      data: { userId: user.id, title: "Dune", author: "Frank Herbert", shelf: "READING" },
-    });
+    const book = await createBook(user.id);
 
     const newNote = new NewNotePage(page, book.id);
     await newNote.goTo();
@@ -69,9 +62,7 @@ test.describe("notes — non-owner", () => {
     const owner = await prisma.user.create({
       data: { email: "owner@example.com", name: "Owner" },
     });
-    const book = await prisma.book.create({
-      data: { userId: owner.id, title: "Forbidden Book", author: "Owner", shelf: "READING" },
-    });
+    const book = await createBook(owner.id, { title: "Forbidden Book", author: "Owner" });
     await prisma.note.create({ data: { bookId: book.id, content: "secret" } });
 
     const detail = new BookDetailPage(page, book.id);
@@ -83,9 +74,7 @@ test.describe("notes — non-owner", () => {
     const owner = await prisma.user.create({
       data: { email: "owner@example.com", name: "Owner" },
     });
-    const book = await prisma.book.create({
-      data: { userId: owner.id, title: "Forbidden Book", author: "Owner", shelf: "READING" },
-    });
+    const book = await createBook(owner.id, { title: "Forbidden Book", author: "Owner" });
 
     // Bypass UI: POST directly to the new-note action as the viewer
     await page.request.post(`/books/${book.id}/notes/new`, {

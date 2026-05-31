@@ -2,15 +2,14 @@ import { expect } from "@playwright/test";
 import { prisma } from "@bookshelf/database";
 import { test } from "../test-fixtures";
 import { BookDetailPage } from "../page-object-models/book-detail-page";
+import { createBook } from "../utilities/utilities";
 
 test.describe("book detail — shelf change & rating", () => {
   test.use({ user: { email: "test@example.com", name: "Test User" } });
 
   test("moves a book to a different shelf", async ({ page }) => {
     const user = await prisma.user.findUniqueOrThrow({ where: { email: "test@example.com" } });
-    const book = await prisma.book.create({
-      data: { userId: user.id, title: "Dune", author: "Frank Herbert", shelf: "WANT_TO_READ" },
-    });
+    const book = await createBook(user.id, { shelf: "WANT_TO_READ" });
 
     const detail = new BookDetailPage(page, book.id);
     await detail.goTo();
@@ -21,9 +20,7 @@ test.describe("book detail — shelf change & rating", () => {
 
   test("rating section appears only when the book is finished", async ({ page }) => {
     const user = await prisma.user.findUniqueOrThrow({ where: { email: "test@example.com" } });
-    const book = await prisma.book.create({
-      data: { userId: user.id, title: "Dune", author: "Frank Herbert", shelf: "READING" },
-    });
+    const book = await createBook(user.id);
 
     const detail = new BookDetailPage(page, book.id);
     await detail.goTo();
@@ -36,9 +33,7 @@ test.describe("book detail — shelf change & rating", () => {
 
   test("saves a rating for a finished book", async ({ page }) => {
     const user = await prisma.user.findUniqueOrThrow({ where: { email: "test@example.com" } });
-    const book = await prisma.book.create({
-      data: { userId: user.id, title: "Dune", author: "Frank Herbert", shelf: "FINISHED" },
-    });
+    const book = await createBook(user.id, { shelf: "FINISHED" });
 
     const detail = new BookDetailPage(page, book.id);
     await detail.goTo();
@@ -52,9 +47,7 @@ test.describe("book detail — shelf change & rating", () => {
 
   test("server rejects rating a non-finished book", async ({ page }) => {
     const user = await prisma.user.findUniqueOrThrow({ where: { email: "test@example.com" } });
-    const book = await prisma.book.create({
-      data: { userId: user.id, title: "Dune", author: "Frank Herbert", shelf: "READING" },
-    });
+    const book = await createBook(user.id);
 
     // Bypass the hidden UI: POST directly to the action with a rating intent
     await page.request.post(`/books/${book.id}`, {
