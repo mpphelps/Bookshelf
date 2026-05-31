@@ -2,15 +2,14 @@ import { expect } from "@playwright/test";
 import { prisma } from "@bookshelf/database";
 import { test } from "../test-fixtures";
 import { BookDetailPage } from "../page-object-models/book-detail-page";
+import { createBook } from "../utilities/utilities";
 
 test.describe("notes delete — owner", () => {
   test.use({ user: { email: "test@example.com", name: "Test User" } });
 
   test("removes the note from the book and the database", async ({ page }) => {
     const user = await prisma.user.findUniqueOrThrow({ where: { email: "test@example.com" } });
-    const book = await prisma.book.create({
-      data: { userId: user.id, title: "Dune", author: "Frank Herbert", shelf: "READING" },
-    });
+    const book = await createBook(user.id);
     const note = await prisma.note.create({
       data: { bookId: book.id, content: "going to be deleted" },
     });
@@ -27,9 +26,7 @@ test.describe("notes delete — owner", () => {
 
   test("removes only the targeted note when multiple exist", async ({ page }) => {
     const user = await prisma.user.findUniqueOrThrow({ where: { email: "test@example.com" } });
-    const book = await prisma.book.create({
-      data: { userId: user.id, title: "Dune", author: "Frank Herbert", shelf: "READING" },
-    });
+    const book = await createBook(user.id);
     await prisma.note.create({
       data: { bookId: book.id, content: "older keeper", createdAt: new Date(Date.now() - 60_000) },
     });
@@ -56,9 +53,7 @@ test.describe("notes delete — non-owner", () => {
     const owner = await prisma.user.create({
       data: { email: "owner@example.com", name: "Owner" },
     });
-    const book = await prisma.book.create({
-      data: { userId: owner.id, title: "Forbidden Book", author: "Owner", shelf: "READING" },
-    });
+    const book = await createBook(owner.id, { title: "Forbidden Book", author: "Owner" });
     const note = await prisma.note.create({
       data: { bookId: book.id, content: "owner's untouchable note" },
     });
