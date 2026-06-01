@@ -9,15 +9,14 @@ export async function action({ request }: Route.ActionArgs) {
   }
 
   //console.log("[test-login] E2E_AUTH_BYPASS is enabled, proceeding with test login");
-  const { email, name, firstName, lastName } = (await request.json()) as {
+  const { email, firstName, lastName } = (await request.json()) as {
     email: string;
-    name: string;
     firstName: string;
     lastName: string;
   };
 
   // console.log("[test-login] Received test login request", { email, name, firstName, lastName });
-  if (!email || !name) {
+  if (!email || !firstName) {
     return new Response("Bad Request", { status: 400 });
   }
   // console.log("[test-login] Checking if user exists in DB");
@@ -26,7 +25,7 @@ export async function action({ request }: Route.ActionArgs) {
 
   // console.log("[test-login] User lookup result", { user: user ? { id: user.id, email: user.email } : null });
   if (!user) {
-    user = await userRepository.create({ email, name, firstName, lastName });
+    user = await userRepository.create({ email, firstName, lastName });
 
     // console.log("[test-login] Created new user", { user: { id: user.id, email: user.email } });
   }

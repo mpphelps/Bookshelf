@@ -5,7 +5,7 @@ import { BookDetailPage } from "../page-object-models/book-detail-page";
 import { createBook, createOwnerUser } from "../utilities/utilities";
 
 test.describe("book delete — owner", () => {
-  test.use({ user: { email: "test@example.com", name: "Test User", firstName: "Test", lastName: "User" } });
+  test.use({ user: { email: "test@example.com", firstName: "Test", lastName: "User" } });
 
   test("deletes the book, cascade-removes notes, and redirects to its shelf", async ({ page }) => {
     const user = await prisma.user.findUniqueOrThrow({ where: { email: "test@example.com" } });
@@ -43,7 +43,7 @@ test.describe("book delete — owner", () => {
 });
 
 test.describe("book delete — non-owner", () => {
-  test.use({ user: { email: "viewer@example.com", name: "Viewer", firstName: "Viewer", lastName: "User" } });
+  test.use({ user: { email: "viewer@example.com", firstName: "Viewer", lastName: "User" } });
 
   test("server rejects deletion of another user's book", async ({ page }) => {
     const owner = await createOwnerUser();

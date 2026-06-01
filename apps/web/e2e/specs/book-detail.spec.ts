@@ -5,7 +5,7 @@ import { BookDetailPage } from "../page-object-models/book-detail-page";
 import { createBook } from "../utilities/utilities";
 
 test.describe("book detail — shelf change & rating", () => {
-  test.use({ user: { email: "test@example.com", name: "Test User", firstName: "Test", lastName: "User" } });
+  test.use({ user: { email: "test@example.com", firstName: "Test", lastName: "User" } });
 
   test("moves a book to a different shelf", async ({ page }) => {
     const user = await prisma.user.findUniqueOrThrow({ where: { email: "test@example.com" } });

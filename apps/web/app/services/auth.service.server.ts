@@ -7,7 +7,6 @@ import { splitName } from "~/lib/name";
 export type AuthUser = {
   id: string;
   email: string;
-  name: string;
   firstName: string;
   lastName: string | null;
   permissions: string[];
@@ -34,7 +33,7 @@ export async function handleCallback(code: string): Promise<{
   // Sync user to local DB on first login
   let user = await userRepository.findByEmail(email);
   if (!user) {
-    user = await userRepository.create({ email, name, firstName, lastName });
+    user = await userRepository.create({ email, firstName, lastName });
   }
 
   return {
@@ -42,7 +41,6 @@ export async function handleCallback(code: string): Promise<{
     user: {
       id: user.id,
       email: user.email,
-      name: user.name,
       firstName: user.firstName,
       lastName: user.lastName,
       permissions: authz.permissions ?? [],
@@ -59,7 +57,6 @@ export async function getAuthenticatedUser(request: Request): Promise<AuthUser |
     return {
       id: user.id,
       email: user.email,
-      name: user.name,
       firstName: user.firstName,
       lastName: user.lastName,
       permissions: ["read:books", "write:books", "read:notes", "write:notes"],
@@ -80,7 +77,6 @@ export async function getAuthenticatedUser(request: Request): Promise<AuthUser |
     return {
       id: user.id,
       email: user.email,
-      name: user.name,
       firstName: user.firstName,
       lastName: user.lastName,
       permissions: payload.permissions ?? [],
