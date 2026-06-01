@@ -107,7 +107,8 @@ Route action (parses formData: bookId, shelf)
 User
   - id          String   @id @default(cuid())
   - email       String   @unique
-  - name        String
+  - firstName   String                                 (CHECK length > 0)
+  - lastName    String?
   - createdAt   DateTime @default(now())
   - updatedAt   DateTime @updatedAt
   - books       Book[]
@@ -115,7 +116,9 @@ User
 Book
   - id          String   @id @default(cuid())
   - title       String
-  - author      String
+  - authors     String[]                               (CHECK cardinality >= 1)
+  - genre       String?
+  - isFavorite  Boolean  @default(false)
   - shelf       Shelf    @default(WANT_TO_READ)
   - rating      Int?     (1-5, only when shelf = FINISHED)
   - userId      String
@@ -139,7 +142,7 @@ enum Shelf {
 }
 ```
 
-Planned schema evolution is exercised in **Build Phase 4** (Migration Exercises) — see §8.
+This schema is the **result** of Phase 4's migration exercises — see §8 for how it evolved from the initial shape (single `author String`, single `name String`, no `genre`/`isFavorite`) through expand/contract sequences.
 
 ---
 
@@ -305,27 +308,31 @@ Live public-facing environment on a home Raspberry Pi 5 so Phase 4 migration exe
 
 Full step-by-step runbook in [`DEPLOYMENT.md`](./DEPLOYMENT.md).
 
-### Phase 4: Migration Exercises (next)
+### Phase 4: Migration Exercises ✅
 
-Pattern matters; suggested payloads chosen to unlock Phase 6 features. Each migration now flows dev → CI → prod via the full pipeline, so exercises teach the complete deploy cadence (including the nightly backup that captures pre/post state).
+Each migration flowed dev → CI → prod via the full pipeline, exercising the complete deploy cadence (including the nightly backup that captured pre/post state). The two expand/contract sequences (M3 and M4) were five PRs each, zero downtime, every checkpoint independently revertable.
 
-- [ ] M1: Add optional column — suggested `Book.genre String?` (unlocks 6.2)
-- [ ] M2: Add required column with backfill — suggested `Book.priority Int` per-shelf (unlocks 6.3)
-- [ ] M3: Extract entity to new table (expand/contract) — suggested: `Book.rating` → `Rating` model
-- [ ] M4: Data backfill — suggested: normalize `Book.author` casing
-- [ ] M5: Column rename without data loss — suggested: `Note.content` → `Note.body`
+- [x] **M1**: Add optional column — `Book.genre String?` (unlocks 6.2). Pure additive, nullable, no backfill. PR #10.
+- [x] **M2**: Add required column with constant default — `Book.isFavorite Boolean @default(false)`. Metadata-only on PG 11+ (constant default = no table rewrite). PR #11.
+- [x] **M3**: Rename `Book.author` → `Book.authors String[]` via expand/contract. Five PRs (#12–#16): expand → backfill → flip with `NOT NULL` + `CHECK (cardinality >= 1)` → stop dual-write + drop `NOT NULL` → `DROP COLUMN`.
+- [x] **M4**: Split `User.name` → `firstName` + `lastName` via expand/contract. Five PRs. **New lesson:** SQL data transform in backfill (`split_part`, `position`, `substring`, `NULLIF`) matching JS `splitName()` exactly. **OIDC refactor:** `handleCallback` now verifies ID token for identity claims (`email`, `given_name`, `family_name`) and access token for permissions — the architecturally correct split. CHECK constraint `length("firstName") > 0` enforced at the DB.
+- 🚫 **M5**: Dropped from plan. Standalone column-drop mechanics already covered by M3's and M4's contract phases; a separate exercise would have been a recap rather than new learning.
 
-**Per-migration teaching loop:**
+**Cheat sheet** captured at [`prismaCheatSheet.md`](./prismaCheatSheet.md) — covers Prisma CLI, schema syntax, expand/contract phases, SQL idioms for transforms, common gotchas (stale client, NOT NULL on populated columns, 1-based vs 0-based offset math).
+
+**Per-migration teaching loop (used for every PR):**
 
 1. Edit `schema.prisma`
 2. `npx prisma migrate dev --create-only` — generates SQL without applying
 3. Inspect the SQL: what gets locked? what happens to existing rows? what's the backfill order?
-4. `npx prisma migrate dev` — applies to dev
+4. `npx prisma migrate dev` — applies to dev + regenerates client
 5. Open PR; CI runs migration against ephemeral Postgres in the e2e job
 6. Squash-merge; CD runs `migrate deploy` against prod via the Docker entrypoint
 7. Nightly backup captures the new schema state
 
-### Phase 5: Polish & Advanced
+**Open follow-up (deferred):** Auth0 database-connection signups (email + password) don't collect `firstName`/`lastName` by default — current behavior falls back to `splitName(name)`, which puts the email address into `firstName` for users who never provided a name. Profile-edit flow (Phase 6.6) addresses this.
+
+### Phase 5: Polish & Advanced (next)
 
 - [ ] Error boundaries (root-level, not just per-route)
 - [ ] Optimistic UI with `useNavigation` / `useFetcher` pending states
@@ -335,11 +342,11 @@ Pattern matters; suggested payloads chosen to unlock Phase 6 features. Each migr
 ### Phase 6: Feature Enhancements
 
 - [ ] 6.1: Open Library API — search-first add-book modal (auto-fill title/author/cover from `openlibrary.org/search.json`); manual entry remains as fallback. Independent of Phase 4.
-- [ ] 6.2: Sort books on a shelf — URL state `?sort=title|author|genre|recent`; genre option requires Phase 4 M1.
-- [ ] 6.3: Drag-and-drop priority reordering within a shelf via `@dnd-kit/sortable`; requires Phase 4 M2 (`Book.priority`).
+- [ ] 6.2: Sort books on a shelf — URL state `?sort=title|author|genre|recent`. Genre column now available (Phase 4 M1).
+- [ ] 6.3: Drag-and-drop priority reordering within a shelf via `@dnd-kit/sortable`. Requires adding `Book.priority Int` via a future expand/contract migration — originally planned as Phase 4 M2 but M2 became `isFavorite` instead.
 - [ ] 6.4: Add a friend; view your friend's shelves
 - [ ] 6.5: Redis caching for friends' shelves
-- [ ] 6.6: User Profile Edit
+- [ ] 6.6: User Profile Edit — also lets email-signup users fill in `firstName`/`lastName` (currently email-as-firstName via `splitName` fallback; see Phase 4 follow-up note).
 
 ---
 
