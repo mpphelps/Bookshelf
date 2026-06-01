@@ -4,7 +4,7 @@ import { test } from "../test-fixtures";
 import { seedBooksForUser } from "../utilities/utilities";
 
 test.describe("shelves reading", () => {
-  test.use({ user: { email: "test@example.com", name: "Test User", firstName: "Test", lastName: "User" } });
+  test.use({ user: { email: "test@example.com", firstName: "Test", lastName: "User" } });
 
   test("visting invalid routes shows error message", async ({ page }) => {
     const shelvesPage = new ShelvesPage(page, "/shelves/INVALID_SHELF");

@@ -16,7 +16,7 @@ enum Shelf {
 model User {
   id        String    @id @default(cuid())
   email     String    @unique
-  name      String
+  name      String?
   firstName String
   lastName  String?
   createdAt DateTime  @default(now())

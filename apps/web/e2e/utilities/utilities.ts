@@ -15,7 +15,6 @@ export async function createOwnerUser(overrides: CreateOwnerUserOverrides = {}) 
   return prisma.user.create({
     data: {
       email: overrides.email ?? "owner@example.com",
-      name,
       firstName: overrides.firstName ?? fallback.firstName,
       lastName: overrides.lastName !== undefined ? overrides.lastName : fallback.lastName,
     },

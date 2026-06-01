@@ -6,7 +6,7 @@ import { EditNotePage } from "../page-object-models/edit-note-page";
 import { createBook, createOwnerUser } from "../utilities/utilities";
 
 test.describe("notes edit — owner", () => {
-  test.use({ user: { email: "test@example.com", name: "Test User", firstName: "Test", lastName: "User" } });
+  test.use({ user: { email: "test@example.com", firstName: "Test", lastName: "User" } });
 
   test("pre-fills the form with current content and saves an update", async ({ page }) => {
     const user = await prisma.user.findUniqueOrThrow({ where: { email: "test@example.com" } });
@@ -58,7 +58,7 @@ test.describe("notes edit — owner", () => {
 });
 
 test.describe("notes edit — non-owner", () => {
-  test.use({ user: { email: "viewer@example.com", name: "Viewer", firstName: "Viewer", lastName: "User" } });
+  test.use({ user: { email: "viewer@example.com", firstName: "Viewer", lastName: "User" } });
 
   test("returns 403 when viewing another user's edit-note route", async ({ page }) => {
     const owner = await createOwnerUser();

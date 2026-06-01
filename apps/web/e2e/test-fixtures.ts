@@ -2,7 +2,7 @@ import { test as base } from "@playwright/test";
 import { prisma } from "@bookshelf/database";
 
 type AppOptions = {
-  user: { email: string; name: string; firstName: string; lastName: string } | null;
+  user: { email: string; firstName: string; lastName: string } | null;
 };
 
 type AppFixtures = {
