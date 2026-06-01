@@ -11,6 +11,7 @@ import { getAuthenticatedUser } from "../services/auth.service.server";
 import { getShelvesOverview } from "../services/book.service.server";
 import { Link } from "react-router";
 import { Button } from "@bookshelf/ui/components/button";
+import { displayName } from "~/lib/name";
 
 export async function loader({ request }: Route.LoaderArgs) {
   const user = await getAuthenticatedUser(request);
@@ -34,10 +35,10 @@ export default function Shelves({ loaderData }: Route.ComponentProps) {
 
   return (
     <div className="relative z-[2] min-h-screen">
-      <SystemHeader userName={user.name} />
+      <SystemHeader userName={displayName(user)} />
 
       <main className="mx-auto max-w-6xl px-6 py-12">
-        <TelemetryHeader userName={user.name} total={total} />
+        <TelemetryHeader userName={displayName(user)} total={total} />
 
         {/* <BracketDivider className="mb-10" label="shelves" trailing={`${shelves.length} categories`} /> */}
 

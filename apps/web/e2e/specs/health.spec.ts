@@ -1,4 +1,5 @@
 import { test, expect } from "../test-fixtures";
+import { createOwnerUser } from "../utilities/utilities";
 
 test("health check returns ok status", async ({ page }) => {
   await page.goto("/health");
@@ -13,7 +14,7 @@ test("test DB is empty at the start of every test", async () => {
 
 test("inserting data in one test does not leak into the next", async () => {
   const { prisma } = await import("@bookshelf/database");
-  await prisma.user.create({ data: { email: "leak-test@example.com", name: "Leak" } });
-  expect(await prisma.user.findUnique({ where: { email: "leak-test@example.com" } })).not.toBeNull();
+  createOwnerUser();
+  expect(await prisma.user.findUnique({ where: { email: "owner@example.com" } })).not.toBeNull();
   expect(await prisma.user.count()).toBe(1);
 });

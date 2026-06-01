@@ -19,6 +19,7 @@ import { EmptyTransmission } from "~/components/layout/empty-transmission";
 import { RouteErrorPanel } from "~/components/layout/route-error-panel";
 import { BookListItem } from "~/components/books/book-list-item";
 import { formatCount, timestamp } from "~/lib/format";
+import { displayName } from "~/lib/name";
 
 type ShelfStatusMeta = {
   label: string;
@@ -81,7 +82,7 @@ export default function ShelfRoute({ loaderData }: Route.ComponentProps) {
 
   return (
     <div className="relative z-[2] min-h-screen">
-      <SystemHeader userName={user.name} section={`SHELF_LOG / ${shelfKey}`} />
+      <SystemHeader userName={displayName(user)} section={`SHELF_LOG / ${shelfKey}`} />
 
       <main className="mx-auto max-w-6xl px-6 py-12">
         <div className="mb-8">

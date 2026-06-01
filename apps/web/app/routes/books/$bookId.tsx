@@ -23,6 +23,7 @@ import { RouteErrorPanel } from "~/components/layout/route-error-panel";
 import { LogEntry } from "~/components/books/log-entry";
 import { RatingStars } from "~/components/books/rating-stars";
 import { formatCount, timestamp } from "~/lib/format";
+import { displayName } from "~/lib/name";
 
 type ShelfStatusMeta = {
   label: string;
@@ -116,7 +117,7 @@ export default function BookDetailRoute({ loaderData, actionData }: Route.Compon
 
   return (
     <div className="relative z-[2] min-h-screen">
-      <SystemHeader userName={user.name} section={`VOL / ${specimenId}`} />
+      <SystemHeader userName={displayName(user)} section={`VOL / ${specimenId}`} />
 
       <main className="mx-auto max-w-6xl px-6 py-12">
         <div className="mb-8">
