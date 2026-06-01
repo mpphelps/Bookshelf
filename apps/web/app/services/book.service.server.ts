@@ -58,7 +58,6 @@ export async function createBook(user: AuthUser, input: { title: string; author:
   return bookRepository.create({
     userId: user.id,
     title,
-    author,
     authors,
     shelf: input.shelf as ShelfKey,
   });
@@ -80,7 +79,6 @@ export async function updateBook(user: AuthUser, bookId: string, input: { title?
     const author = input.author.trim();
     if (author.length === 0) errors.author = "Author cannot be empty";
     else {
-      data.author = author;
       data.authors = [author];
     }
   }

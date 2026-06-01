@@ -4,12 +4,12 @@ import type { Shelf } from "@bookshelf/database";
 export async function seedBooksForUser(userId: string) {
   await prisma.book.createMany({
     data: [
-      { title: "Book 1", author: "Author 1", authors: ["Author 1"], userId, shelf: "WANT_TO_READ" },
-      { title: "Book 2", author: "Author 2", authors: ["Author 2"], userId, shelf: "WANT_TO_READ" },
-      { title: "Book 3", author: "Author 2", authors: ["Author 2"], userId, shelf: "WANT_TO_READ" },
-      { title: "Book 4", author: "Author 2", authors: ["Author 2"], userId, shelf: "READING" },
-      { title: "Book 5", author: "Author 2", authors: ["Author 2"], userId, shelf: "READING" },
-      { title: "Book 6", author: "Author 2", authors: ["Author 2"], userId, shelf: "FINISHED" },
+      { title: "Book 1", authors: ["Author 1"], userId, shelf: "WANT_TO_READ" },
+      { title: "Book 2", authors: ["Author 2"], userId, shelf: "WANT_TO_READ" },
+      { title: "Book 3", authors: ["Author 2"], userId, shelf: "WANT_TO_READ" },
+      { title: "Book 4", authors: ["Author 2"], userId, shelf: "READING" },
+      { title: "Book 5", authors: ["Author 2"], userId, shelf: "READING" },
+      { title: "Book 6", authors: ["Author 2"], userId, shelf: "FINISHED" },
     ],
   });
 }
