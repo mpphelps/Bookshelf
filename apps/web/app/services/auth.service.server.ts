@@ -8,6 +8,8 @@ export type AuthUser = {
   id: string;
   email: string;
   name: string;
+  firstName: string;
+  lastName: string | null;
   permissions: string[];
 };
 
@@ -41,6 +43,8 @@ export async function handleCallback(code: string): Promise<{
       id: user.id,
       email: user.email,
       name: user.name,
+      firstName: user.firstName,
+      lastName: user.lastName,
       permissions: authz.permissions ?? [],
     },
   };
@@ -56,6 +60,8 @@ export async function getAuthenticatedUser(request: Request): Promise<AuthUser |
       id: user.id,
       email: user.email,
       name: user.name,
+      firstName: user.firstName,
+      lastName: user.lastName,
       permissions: ["read:books", "write:books", "read:notes", "write:notes"],
     };
   }
@@ -75,6 +81,8 @@ export async function getAuthenticatedUser(request: Request): Promise<AuthUser |
       id: user.id,
       email: user.email,
       name: user.name,
+      firstName: user.firstName,
+      lastName: user.lastName,
       permissions: payload.permissions ?? [],
     };
   } catch {

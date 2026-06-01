@@ -10,3 +10,7 @@ export function splitName(name: string): SplitName {
     lastName: trimmed.substring(firstSpace + 1).trim() || null,
   };
 }
+
+export function displayName(user: { firstName: string; lastName: string | null }): string {
+  return user.lastName ? `${user.firstName} ${user.lastName}` : user.firstName;
+}
