@@ -30,7 +30,6 @@ export async function createBook(userId: string, overrides: CreateBookOverrides 
     data: {
       userId,
       title: overrides.title ?? "Dune",
-      author,
       authors: overrides.authors ?? [author],
       shelf: overrides.shelf ?? "READING",
       rating: overrides.rating ?? null,
