@@ -144,7 +144,7 @@ export default function ShelfRoute({ loaderData }: Route.ComponentProps) {
           <ol className="grid grid-cols-1 gap-3">
             {books.map((book, idx) => (
               <li key={book.id}>
-                <BookListItem to={`/books/${book.id}`} slotIndex={idx} title={book.title} author={book.author} rating={book.rating} />
+                <BookListItem to={`/books/${book.id}`} slotIndex={idx} title={book.title} authors={book.authors} rating={book.rating} />
               </li>
             ))}
           </ol>

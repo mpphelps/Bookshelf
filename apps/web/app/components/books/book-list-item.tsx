@@ -10,17 +10,11 @@ type BookListItemProps = {
   to: string;
   slotIndex: number;
   title: string;
-  author: string;
+  authors: string[];
   rating: number | null;
 };
 
-export function BookListItem({
-  to,
-  slotIndex,
-  title,
-  author,
-  rating,
-}: BookListItemProps) {
+export function BookListItem({ to, slotIndex, title, authors, rating }: BookListItemProps) {
   const slot = (slotIndex + 1).toString().padStart(3, "0");
 
   return (
@@ -39,22 +33,16 @@ export function BookListItem({
             {title}
           </DisplayHeading>
           <p className="mt-1 truncate font-mono text-xs text-muted-foreground">
-            by <span className="text-foreground/80">{author}</span>
+            by <span className="text-foreground/80">{authors.join(", ")}</span>
           </p>
         </div>
 
         <div className="col-span-10 md:col-span-3 md:text-right">
-          {rating !== null ? (
-            <RatingStars rating={rating} className="font-mono text-xs text-accent" />
-          ) : (
-            <MicroLabel>unrated</MicroLabel>
-          )}
+          {rating !== null ? <RatingStars rating={rating} className="font-mono text-xs text-accent" /> : <MicroLabel>unrated</MicroLabel>}
         </div>
 
         <div className="col-span-2 md:col-span-1 md:text-right">
-          <span className="font-mono text-primary transition-transform group-hover:translate-x-1 inline-block">
-            →
-          </span>
+          <span className="font-mono text-primary transition-transform group-hover:translate-x-1 inline-block">→</span>
         </div>
       </Link>
     </Panel>
