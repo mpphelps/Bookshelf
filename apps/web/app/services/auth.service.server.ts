@@ -1,7 +1,8 @@
 import { ForbiddenError } from "~/lib/errors";
-import { exchangeCodeForTokens, verifyAccessToken } from "../lib/auth0.server";
+import { exchangeCodeForTokens, verifyAccessToken, verifyIdToken } from "../lib/auth0.server";
 import { getSessionToken, getTestSessionEmail } from "../lib/session.server";
 import { userRepository } from "../repositories/user.repository.server";
+import { splitName } from "~/lib/name";
 
 export type AuthUser = {
   id: string;
@@ -15,19 +16,23 @@ export async function handleCallback(code: string): Promise<{
   user: AuthUser;
 }> {
   const tokens = await exchangeCodeForTokens(code);
-  const payload = await verifyAccessToken(tokens.access_token);
+  const [identity, authz] = await Promise.all([verifyIdToken(tokens.id_token), verifyAccessToken(tokens.access_token)]);
 
-  const email = payload.email;
-  const name = payload.name || email || "Unknown";
-
+  const email = identity.email;
   if (!email) {
-    throw new Error("No email in token payload");
+    throw new Error("No email in ID token");
   }
+
+  const name = identity.name || email;
+
+  const { firstName, lastName } = identity.given_name
+    ? { firstName: identity.given_name, lastName: identity.family_name ?? null }
+    : splitName(name);
 
   // Sync user to local DB on first login
   let user = await userRepository.findByEmail(email);
   if (!user) {
-    user = await userRepository.create({ email, name });
+    user = await userRepository.create({ email, name, firstName, lastName });
   }
 
   return {
@@ -36,7 +41,7 @@ export async function handleCallback(code: string): Promise<{
       id: user.id,
       email: user.email,
       name: user.name,
-      permissions: payload.permissions ?? [],
+      permissions: authz.permissions ?? [],
     },
   };
 }

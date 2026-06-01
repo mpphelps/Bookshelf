@@ -1,7 +1,7 @@
 import { test, expect } from "../test-fixtures";
 
 test.describe("authentication", () => {
-  test.use({ user: { email: "test@example.com", name: "Test User" } });
+  test.use({ user: { email: "test@example.com", name: "Test User", firstName: "Test", lastName: "User" } });
 
   test("allows logging in with test credentials", async ({ page }) => {
     await page.goto("/");

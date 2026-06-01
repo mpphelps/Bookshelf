@@ -147,20 +147,20 @@ Planned schema evolution is exercised in **Build Phase 4** (Migration Exercises)
 
 ### Pages
 
-| Route                                    | Description                                                        | Notes                              |
-| ---------------------------------------- | ------------------------------------------------------------------ | ---------------------------------- |
-| `/`                                      | Landing / redirect to `/shelves`                                   | Root loader                        |
-| `/auth/login`                            | Redirects to Auth0 authorize URL                                   | OAuth 2.0 redirect                 |
-| `/auth/callback`                         | Auth0 callback — validates code, creates session                   | OAuth callback                     |
-| `/auth/logout`                           | Clears session, redirects to Auth0 logout                          | Session destruction                |
-| `/auth/test-login`                       | Test-only bypass; gated by `E2E_AUTH_BYPASS=1`                     | E2E auth                           |
-| `/health`                                | Shallow liveness probe (no DB query); used by Playwright + Pi CD   | 200 OK + plain HTML                |
-| `/shelves`                               | Dashboard — three shelf tiles with book counts                     | Loader with DB query               |
-| `/shelves/$shelf`                        | Filtered view of one shelf                                         | Dynamic route params               |
-| `/books/new`                             | Add a book (route modal)                                           | Action, form validation, redirect  |
-| `/books/$bookId`                         | Book detail — notes inline, rating, shelf change, delete           | Multi-intent action (`intent=...`) |
-| `/books/$bookId/notes/new`               | Add a note (route modal)                                           | Reuses `NoteFormModal`             |
-| `/books/$bookId/notes/$noteId/edit`      | Edit a note (route modal)                                          | Reuses `NoteFormModal`             |
+| Route                               | Description                                                      | Notes                              |
+| ----------------------------------- | ---------------------------------------------------------------- | ---------------------------------- |
+| `/`                                 | Landing / redirect to `/shelves`                                 | Root loader                        |
+| `/auth/login`                       | Redirects to Auth0 authorize URL                                 | OAuth 2.0 redirect                 |
+| `/auth/callback`                    | Auth0 callback — validates code, creates session                 | OAuth callback                     |
+| `/auth/logout`                      | Clears session, redirects to Auth0 logout                        | Session destruction                |
+| `/auth/test-login`                  | Test-only bypass; gated by `E2E_AUTH_BYPASS=1`                   | E2E auth                           |
+| `/health`                           | Shallow liveness probe (no DB query); used by Playwright + Pi CD | 200 OK + plain HTML                |
+| `/shelves`                          | Dashboard — three shelf tiles with book counts                   | Loader with DB query               |
+| `/shelves/$shelf`                   | Filtered view of one shelf                                       | Dynamic route params               |
+| `/books/new`                        | Add a book (route modal)                                         | Action, form validation, redirect  |
+| `/books/$bookId`                    | Book detail — notes inline, rating, shelf change, delete         | Multi-intent action (`intent=...`) |
+| `/books/$bookId/notes/new`          | Add a note (route modal)                                         | Reuses `NoteFormModal`             |
+| `/books/$bookId/notes/$noteId/edit` | Edit a note (route modal)                                        | Reuses `NoteFormModal`             |
 
 ### Key React Router v7 concepts covered
 
@@ -339,6 +339,7 @@ Pattern matters; suggested payloads chosen to unlock Phase 6 features. Each migr
 - [ ] 6.3: Drag-and-drop priority reordering within a shelf via `@dnd-kit/sortable`; requires Phase 4 M2 (`Book.priority`).
 - [ ] 6.4: Add a friend; view your friend's shelves
 - [ ] 6.5: Redis caching for friends' shelves
+- [ ] 6.6: User Profile Edit
 
 ---
 
