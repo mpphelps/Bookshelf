@@ -3,7 +3,7 @@ import { NewBookPage } from "../page-object-models/new-book-page";
 import { ShelvesPage } from "../page-object-models/shelves-page";
 
 test.describe("create book", () => {
-  test.use({ user: { email: "test@example.com", name: "Test User" } });
+  test.use({ user: { email: "test@example.com", name: "Test User", firstName: "Test", lastName: "User" } });
 
   test("creates a book and redirects to its shelf", async ({ page }) => {
     const newBookPage = new NewBookPage(page);

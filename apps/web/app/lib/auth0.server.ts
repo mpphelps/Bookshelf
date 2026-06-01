@@ -80,6 +80,31 @@ export async function verifyAccessToken(token: string) {
   };
 }
 
+export async function verifyIdToken(token: string) {
+  const decoded = jwt.decode(token, { complete: true });
+  if (!decoded || !decoded.header.kid) {
+    throw new Error("Invalid token");
+  }
+
+  const signingKey = await getSigningKey(decoded.header.kid);
+
+  return jwt.verify(token, signingKey, {
+    algorithms: ["RS256"],
+    audience: clientId,
+    issuer: `https://${domain}/`,
+  }) as {
+    sub: string;
+    email?: string;
+    email_verified?: boolean;
+    name?: string;
+    given_name?: string;
+    family_name?: string;
+    nickname?: string;
+    picture?: string;
+    [key: string]: unknown;
+  };
+}
+
 export function getLogoutUrl(): string {
   const baseUrl = new URL(callbackUrl).origin;
   const params = new URLSearchParams({

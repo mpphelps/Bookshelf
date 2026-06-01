@@ -3,10 +3,10 @@ import { prisma } from "@bookshelf/database";
 import { test } from "../test-fixtures";
 import { BookDetailPage } from "../page-object-models/book-detail-page";
 import { NewNotePage } from "../page-object-models/new-note-page";
-import { createBook } from "../utilities/utilities";
+import { createBook, createOwnerUser } from "../utilities/utilities";
 
 test.describe("notes — owner", () => {
-  test.use({ user: { email: "test@example.com", name: "Test User" } });
+  test.use({ user: { email: "test@example.com", name: "Test User", firstName: "Test", lastName: "User" } });
 
   test("shows empty state when book has no notes", async ({ page }) => {
     const user = await prisma.user.findUniqueOrThrow({ where: { email: "test@example.com" } });
@@ -56,12 +56,10 @@ test.describe("notes — owner", () => {
 });
 
 test.describe("notes — non-owner", () => {
-  test.use({ user: { email: "viewer@example.com", name: "Viewer" } });
+  test.use({ user: { email: "viewer@example.com", name: "Viewer", firstName: "Viewer", lastName: "User" } });
 
   test("returns 403 when viewing another user's book detail (which inlines notes)", async ({ page }) => {
-    const owner = await prisma.user.create({
-      data: { email: "owner@example.com", name: "Owner" },
-    });
+    const owner = await createOwnerUser();
     const book = await createBook(owner.id, { title: "Forbidden Book", author: "Owner" });
     await prisma.note.create({ data: { bookId: book.id, content: "secret" } });
 
@@ -71,9 +69,7 @@ test.describe("notes — non-owner", () => {
   });
 
   test("returns 403 when posting a note to another user's book", async ({ page }) => {
-    const owner = await prisma.user.create({
-      data: { email: "owner@example.com", name: "Owner" },
-    });
+    const owner = await createOwnerUser();
     const book = await createBook(owner.id, { title: "Forbidden Book", author: "Owner" });
 
     // Bypass UI: POST directly to the new-note action as the viewer

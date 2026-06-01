@@ -4,7 +4,7 @@ import { test } from "../test-fixtures";
 import { seedBooksForUser } from "../utilities/utilities";
 
 test.describe("shelves page", () => {
-  test.use({ user: { email: "test@example.com", name: "Test User" } });
+  test.use({ user: { email: "test@example.com", name: "Test User", firstName: "Test", lastName: "User" } });
 
   test("shows shelf count for the user's books", async ({ page }) => {
     const user = await prisma.user.findUniqueOrThrow({

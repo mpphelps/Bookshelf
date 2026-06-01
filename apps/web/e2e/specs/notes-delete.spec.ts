@@ -2,10 +2,10 @@ import { expect } from "@playwright/test";
 import { prisma } from "@bookshelf/database";
 import { test } from "../test-fixtures";
 import { BookDetailPage } from "../page-object-models/book-detail-page";
-import { createBook } from "../utilities/utilities";
+import { createBook, createOwnerUser } from "../utilities/utilities";
 
 test.describe("notes delete — owner", () => {
-  test.use({ user: { email: "test@example.com", name: "Test User" } });
+  test.use({ user: { email: "test@example.com", name: "Test User", firstName: "Test", lastName: "User" } });
 
   test("removes the note from the book and the database", async ({ page }) => {
     const user = await prisma.user.findUniqueOrThrow({ where: { email: "test@example.com" } });
@@ -47,12 +47,10 @@ test.describe("notes delete — owner", () => {
 });
 
 test.describe("notes delete — non-owner", () => {
-  test.use({ user: { email: "viewer@example.com", name: "Viewer" } });
+  test.use({ user: { email: "viewer@example.com", name: "Viewer", firstName: "Viewer", lastName: "User" } });
 
   test("server rejects deletion of another user's note via direct POST", async ({ page }) => {
-    const owner = await prisma.user.create({
-      data: { email: "owner@example.com", name: "Owner" },
-    });
+    const owner = await createOwnerUser();
     const book = await createBook(owner.id, { title: "Forbidden Book", author: "Owner" });
     const note = await prisma.note.create({
       data: { bookId: book.id, content: "owner's untouchable note" },

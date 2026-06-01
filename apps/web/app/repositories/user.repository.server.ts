@@ -9,7 +9,7 @@ export const userRepository = {
     return prisma.user.findUnique({ where: { id } });
   },
 
-  async create(data: { email: string; name: string }) {
+  async create(data: { email: string; name: string; firstName: string; lastName: string | null }) {
     return prisma.user.create({ data });
   },
 };
