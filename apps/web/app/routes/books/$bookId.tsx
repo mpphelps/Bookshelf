@@ -83,11 +83,7 @@ export async function action({ request, params }: Route.ActionArgs) {
     if (error instanceof ValidationError) {
       return { errors: error.fields };
     }
-    if (
-      error instanceof BookNotFoundError ||
-      error instanceof NoteNotFoundError ||
-      error instanceof ForbiddenError
-    ) {
+    if (error instanceof BookNotFoundError || error instanceof NoteNotFoundError || error instanceof ForbiddenError) {
       throw new Response(error.message, { status: error.status });
     }
     throw error;
@@ -124,24 +120,21 @@ export default function BookDetailRoute({ loaderData, actionData }: Route.Compon
 
       <main className="mx-auto max-w-6xl px-6 py-12">
         <div className="mb-8">
-          <BackLink to={`/shelves/${book.shelf.toLowerCase()}`}>
-            {shelfLabel.toUpperCase()} SHELF
-          </BackLink>
+          <BackLink to={`/shelves/${book.shelf.toLowerCase()}`}>{shelfLabel.toUpperCase()} SHELF</BackLink>
         </div>
 
         <ManifestHeader
           alignAside="start"
           channel={
             <>
-              volume manifest /{" "}
-              <span className="text-foreground/80">specimen #{specimenId}</span>
+              volume manifest / <span className="text-foreground/80">specimen #{specimenId}</span>
             </>
           }
           heading={
             <>
               <span className="block mb-3">{book.title}</span>
               <span className="block font-mono text-sm md:text-base text-muted-foreground">
-                by <span className="text-foreground/90">{book.author}</span>
+                by <span className="text-foreground/90">{book.authors.join(", ")}</span>
               </span>
             </>
           }
@@ -150,15 +143,7 @@ export default function BookDetailRoute({ loaderData, actionData }: Route.Compon
               <StatReadout label="current shelf">
                 <span className="flex md:justify-end items-center gap-2">
                   <StatusIndicator tone={shelfMeta.tone} pulsing={shelfMeta.pulsing}>
-                    <MicroLabel
-                      tone={
-                        shelfMeta.tone === "primary"
-                          ? "primary"
-                          : shelfMeta.tone === "accent"
-                            ? "accent"
-                            : "default"
-                      }
-                    >
+                    <MicroLabel tone={shelfMeta.tone === "primary" ? "primary" : shelfMeta.tone === "accent" ? "accent" : "default"}>
                       {shelfMeta.label}
                     </MicroLabel>
                   </StatusIndicator>
@@ -190,19 +175,14 @@ export default function BookDetailRoute({ loaderData, actionData }: Route.Compon
                 <MicroLabel className="block">Move to shelf</MicroLabel>
               </label>
               <div className="flex items-center gap-3">
-                <Select
-                  id="move-shelf"
-                  name="shelf"
-                  defaultValue={book.shelf}
-                  required
-                  size="lg"
-                  className="flex-1"
-                >
+                <Select id="move-shelf" name="shelf" defaultValue={book.shelf} required size="lg" className="flex-1">
                   <option value="WANT_TO_READ">Want to Read</option>
                   <option value="READING">Reading</option>
                   <option value="FINISHED">Finished</option>
                 </Select>
-                <Button type="submit" size="sm">Move</Button>
+                <Button type="submit" size="sm">
+                  Move
+                </Button>
               </div>
               {errors?.shelf && (
                 <p role="alert" className="font-mono text-xs text-destructive">
@@ -215,37 +195,30 @@ export default function BookDetailRoute({ loaderData, actionData }: Route.Compon
           {isFinished ? (
             <Panel padding="md" surface="card">
               <MicroLabel className="mb-3 block">[ rating ]</MicroLabel>
-              <h2 className="display text-xl md:text-2xl text-foreground mb-3 leading-tight">
-                Rating
-              </h2>
+              <h2 className="display text-xl md:text-2xl text-foreground mb-3 leading-tight">Rating</h2>
               {book.rating !== null ? (
                 <p className="mb-4 font-mono text-sm text-muted-foreground">
                   Current: <span className="text-accent tabular-nums">{book.rating}/5</span>
                 </p>
               ) : (
-                <p className="mb-4 font-mono text-xs text-muted-foreground">
-                  awaiting first calibration.
-                </p>
+                <p className="mb-4 font-mono text-xs text-muted-foreground">awaiting first calibration.</p>
               )}
               <Form method="post" className="flex flex-col gap-3">
                 <input type="hidden" name="intent" value="rate-book" />
-                <label htmlFor="rating" className="sr-only">Rating</label>
+                <label htmlFor="rating" className="sr-only">
+                  Rating
+                </label>
                 <div className="flex items-center gap-3">
-                  <Select
-                    name="rating"
-                    id="rating"
-                    defaultValue={book.rating ?? 5}
-                    required
-                    size="lg"
-                    className="flex-1"
-                  >
+                  <Select name="rating" id="rating" defaultValue={book.rating ?? 5} required size="lg" className="flex-1">
                     {[1, 2, 3, 4, 5].map((n) => (
                       <option key={n} value={n}>
                         {"★".repeat(n)} ({n})
                       </option>
                     ))}
                   </Select>
-                  <Button type="submit" size="sm">Save Rating</Button>
+                  <Button type="submit" size="sm">
+                    Save Rating
+                  </Button>
                 </div>
                 {errors?.rating && (
                   <p role="alert" className="font-mono text-xs text-destructive">
@@ -260,8 +233,7 @@ export default function BookDetailRoute({ loaderData, actionData }: Route.Compon
               <p className="font-mono text-sm text-muted-foreground/80 leading-relaxed">
                 rating module sealed.
                 <br />
-                file this volume on the{" "}
-                <span className="text-foreground/80">FINISHED</span> shelf to unlock.
+                file this volume on the <span className="text-foreground/80">FINISHED</span> shelf to unlock.
               </p>
             </Panel>
           )}
@@ -269,11 +241,7 @@ export default function BookDetailRoute({ loaderData, actionData }: Route.Compon
 
         {/* ─── LOG ENTRIES (notes) ─────────────────────────── */}
         <div className="mb-6 flex items-center justify-between gap-4">
-          <BracketDivider
-            className="flex-1"
-            label="log entries"
-            trailing={`${formatCount(notes.length)} records`}
-          />
+          <BracketDivider className="flex-1" label="log entries" trailing={`${formatCount(notes.length)} records`} />
           <Button variant="outline" size="sm" asChild>
             <Link to={`/books/${book.id}/notes/new`} className="display !text-[10px]">
               + Add note
@@ -282,22 +250,12 @@ export default function BookDetailRoute({ loaderData, actionData }: Route.Compon
         </div>
 
         {notes.length === 0 ? (
-          <EmptyTransmission
-            art="◌  ── log unwritten ──  ◌"
-            title="No notes yet."
-            subtitle="field observations will appear here."
-          />
+          <EmptyTransmission art="◌  ── log unwritten ──  ◌" title="No notes yet." subtitle="field observations will appear here." />
         ) : (
           <ol className="grid grid-cols-1 gap-3">
             {notes.map((note, idx) => (
               <li key={note.id}>
-                <LogEntry
-                  index={idx}
-                  bookId={book.id}
-                  noteId={note.id}
-                  createdAt={note.createdAt}
-                  content={note.content}
-                />
+                <LogEntry index={idx} bookId={book.id} noteId={note.id} createdAt={note.createdAt} content={note.content} />
               </li>
             ))}
           </ol>
@@ -310,12 +268,9 @@ export default function BookDetailRoute({ loaderData, actionData }: Route.Compon
           <MicroLabel tone="default" className="mb-3 block text-destructive/80">
             [ destructive action ]
           </MicroLabel>
-          <h2 className="display text-xl md:text-2xl text-foreground mb-2 leading-tight">
-            Decommission volume
-          </h2>
+          <h2 className="display text-xl md:text-2xl text-foreground mb-2 leading-tight">Decommission volume</h2>
           <p className="mb-5 font-mono text-xs text-muted-foreground/80 leading-relaxed">
-            permanently removes this volume and all{" "}
-            <span className="text-foreground/80">{formatCount(notes.length)}</span> log{" "}
+            permanently removes this volume and all <span className="text-foreground/80">{formatCount(notes.length)}</span> log{" "}
             {notes.length === 1 ? "entry" : "entries"}. cannot be undone.
           </p>
           <Form
