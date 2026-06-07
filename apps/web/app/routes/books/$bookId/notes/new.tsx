@@ -1,10 +1,10 @@
-import { isRouteErrorResponse, redirect, useActionData, useParams } from "react-router";
+import { redirect, useActionData, useParams } from "react-router";
 import { getAuthenticatedUser } from "~/services/auth.service.server";
 import { createNoteForBook } from "~/services/note.service.server";
 import { BookNotFoundError, ForbiddenError, ValidationError } from "~/lib/errors";
+import { makeModalErrorBoundary } from "~/lib/error-boundary";
 import type { Route } from "./+types/new";
 
-import { RouteModal } from "~/components/layout/route-modal";
 import { NoteFormModal } from "~/components/books/note-form-modal";
 
 export async function loader({ request }: Route.LoaderArgs) {
@@ -34,23 +34,9 @@ export async function action({ request, params }: Route.ActionArgs) {
   }
 }
 
-export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
-  const params = useParams<{ bookId: string }>();
-  if (isRouteErrorResponse(error)) {
-    return (
-      <RouteModal
-        returnTo={`/books/${params.bookId ?? ""}`}
-        title="Error"
-        description={`${error.status} · ${error.data}`}
-      >
-        <p className="font-mono text-xs text-muted-foreground" role="alert">
-          {error.status} · {error.data}
-        </p>
-      </RouteModal>
-    );
-  }
-  throw error;
-}
+export const ErrorBoundary = makeModalErrorBoundary({
+  getReturnTo: (params) => `/books/${params.bookId ?? ""}`,
+});
 
 export default function NewNoteRoute() {
   const params = useParams<{ bookId: string }>();

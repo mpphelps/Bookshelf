@@ -1,6 +1,7 @@
-import { isRouteErrorResponse, Links, Meta, Outlet, Scripts, ScrollRestoration } from "react-router";
+import { Link, Links, Meta, Outlet, Scripts, ScrollRestoration, isRouteErrorResponse } from "react-router";
 
 import type { Route } from "./+types/root";
+import { RouteErrorPanel } from "~/components/layout/route-error-panel";
 import "./app.css";
 
 export const links: Route.LinksFunction = () => [
@@ -38,29 +39,41 @@ export default function App() {
   return <Outlet />;
 }
 
-export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
-  let message = "Oops!";
-  let details = "An unexpected error occurred.";
-  let stack: string | undefined;
+function BrandmarkHeader() {
+  return (
+    <header className="border-b border-border/80 bg-background/60 backdrop-blur-sm">
+      <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-3 text-xs sm:px-6">
+        <Link to="/" className="display !text-[12px]">
+          BOOKSHELF
+        </Link>
+      </div>
+    </header>
+  );
+}
 
+export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
   if (isRouteErrorResponse(error)) {
-    message = error.status === 404 ? "404" : "Error";
-    details = error.status === 404 ? "The requested page could not be found." : error.statusText || details;
-    // eslint-disable-next-line turbo/no-undeclared-env-vars
-  } else if (import.meta.env.DEV && error && error instanceof Error) {
-    details = error.message;
-    stack = error.stack;
+    return (
+      <>
+        <BrandmarkHeader />
+        <RouteErrorPanel status={error.status} message={error.data} />
+      </>
+    );
   }
 
+  const message = error instanceof Error ? error.message : "Unknown error";
+  // eslint-disable-next-line turbo/no-undeclared-env-vars
+  const stack = import.meta.env.DEV && error instanceof Error ? error.stack : undefined;
+
   return (
-    <main className="pt-16 p-4 container mx-auto">
-      <h1>{message}</h1>
-      <p>{details}</p>
+    <>
+      <BrandmarkHeader />
+      <RouteErrorPanel status={500} message={message} />
       {stack && (
-        <pre className="w-full p-4 overflow-x-auto">
+        <pre className="mx-auto max-w-3xl px-6 pb-12 overflow-x-auto font-mono text-xs text-muted-foreground">
           <code>{stack}</code>
         </pre>
       )}
-    </main>
+    </>
   );
 }

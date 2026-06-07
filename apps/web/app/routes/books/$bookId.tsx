@@ -1,9 +1,10 @@
-import { Form, Link, Outlet, isRouteErrorResponse, redirect } from "react-router";
+import { Form, Link, Outlet, redirect } from "react-router";
 import { getAuthenticatedUser } from "~/services/auth.service.server";
 import { deleteBook, rateBook, updateBook } from "~/services/book.service.server";
 import { deleteNote, listNotesForBook } from "~/services/note.service.server";
 import { SHELF_LABELS, type ShelfKey } from "~/lib/shelves";
 import { BookNotFoundError, ForbiddenError, NoteNotFoundError, ValidationError } from "~/lib/errors";
+import { makeRouteErrorBoundary } from "~/lib/error-boundary";
 import type { Route } from "./+types/$bookId";
 
 import { BracketDivider } from "@bookshelf/ui/components/bracket-divider";
@@ -19,7 +20,6 @@ import { TransmissionFooter } from "~/components/layout/transmission-footer";
 import { BackLink } from "~/components/layout/back-link";
 import { ManifestHeader } from "~/components/layout/manifest-header";
 import { EmptyTransmission } from "~/components/layout/empty-transmission";
-import { RouteErrorPanel } from "~/components/layout/route-error-panel";
 import { LogEntry } from "~/components/books/log-entry";
 import { RatingStars } from "~/components/books/rating-stars";
 import { formatCount, timestamp } from "~/lib/format";
@@ -91,19 +91,10 @@ export async function action({ request, params }: Route.ActionArgs) {
   }
 }
 
-export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
-  if (isRouteErrorResponse(error)) {
-    return (
-      <RouteErrorPanel
-        microLabel="record sealed"
-        status={error.status}
-        message={error.data}
-        description="this volume is not accessible from your terminal."
-      />
-    );
-  }
-  throw error;
-}
+export const ErrorBoundary = makeRouteErrorBoundary({
+  microLabel: "record sealed",
+  description: "this volume is not accessible from your terminal.",
+});
 
 export default function BookDetailRoute({ loaderData, actionData }: Route.ComponentProps) {
   const { user, book, notes } = loaderData;
