@@ -10,6 +10,8 @@ export default [
     route("notes/:noteId/edit", "routes/books/$bookId/notes/$noteId/edit.tsx"),
   ]),
   route("health", "routes/health.tsx"),
+  route("robots.txt", "routes/robots.ts"),
+  route("sitemap.xml", "routes/sitemap.ts"),
   route("auth/login", "routes/auth.login.ts"),
   route("auth/callback", "routes/auth.callback.ts"),
   route("auth/logout", "routes/auth.logout.ts"),

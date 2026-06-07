@@ -7,6 +7,8 @@ import type { Route } from "./+types/edit";
 
 import { NoteFormModal } from "~/components/books/note-form-modal";
 
+export const meta: Route.MetaFunction = () => [{ title: "Edit note — Bookshelf" }];
+
 export async function loader({ request, params }: Route.LoaderArgs) {
   const user = await getAuthenticatedUser(request);
   if (!user) return redirect("/auth/login");

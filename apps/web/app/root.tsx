@@ -15,6 +15,31 @@ export const links: Route.LinksFunction = () => [
     rel: "stylesheet",
     href: "https://fonts.googleapis.com/css2?family=Michroma&family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap",
   },
+  { rel: "canonical", href: "https://readingbookshelf.com" },
+];
+
+export const meta: Route.MetaFunction = () => [
+  { title: "Bookshelf — track your reading" },
+  {
+    name: "description",
+    content:
+      "A personal book tracker. Move books across Want to Read, Reading, and Finished shelves; rate finished books; capture notes as you read.",
+  },
+  { name: "theme-color", content: "#0a0a0a" },
+  { property: "og:type", content: "website" },
+  { property: "og:site_name", content: "Bookshelf" },
+  { property: "og:title", content: "Bookshelf — track your reading" },
+  {
+    property: "og:description",
+    content: "Track your reading across Want to Read, Reading, and Finished shelves.",
+  },
+  { property: "og:url", content: "https://readingbookshelf.com" },
+  { name: "twitter:card", content: "summary" },
+  { name: "twitter:title", content: "Bookshelf — track your reading" },
+  {
+    name: "twitter:description",
+    content: "Track your reading across Want to Read, Reading, and Finished shelves.",
+  },
 ];
 
 export function Layout({ children }: { children: React.ReactNode }) {

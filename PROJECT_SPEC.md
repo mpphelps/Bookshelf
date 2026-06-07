@@ -335,8 +335,8 @@ Each migration flowed dev → CI → prod via the full pipeline, exercising the 
 ### Phase 5: Polish & Advanced (in progress)
 
 - [x] Error boundaries — root-level catch-all + per-route boundaries via factory (`makeRouteErrorBoundary` / `makeModalErrorBoundary`); status-keyed default copy via `ErrorLookup` in `lib/errors.ts`
-- [ ] Optimistic UI with `useNavigation` / `useFetcher` pending states
-- [ ] SEO: meta tags, Open Graph, sitemap, robots.txt — app is public + search-discoverable
+- 🚫 Optimistic UI — skipped. Existing `<Form>` submissions are idempotent and the Submit button already handles in-flight cancellation; no pain point worth solving.
+- [x] SEO: root + per-route `meta` exports (title, description, OG, Twitter card); `routes/robots.ts` allows `/` and disallows auth/private paths; `routes/sitemap.ts` lists `/` only (user content is auth-gated)
 - [ ] Performance pass: bundle analysis, image optimization for book covers
 
 ### Phase 6: Feature Enhancements
