@@ -7,9 +7,10 @@ type SystemHeaderProps = {
   userName: string;
   section?: string;
   build?: string;
+  isAdmin?: boolean;
 };
 
-export function SystemHeader({ userName, section = "MISSION_LOG", build = "v0.1.0 · sector-7" }: SystemHeaderProps) {
+export function SystemHeader({ userName, section = "MISSION_LOG", build = "v0.1.0 · sector-7", isAdmin = false }: SystemHeaderProps) {
   const displayName = userName.includes("@")
     ? userName.split("@")[0]
     : userName.split(" ")[0];
@@ -43,6 +44,14 @@ export function SystemHeader({ userName, section = "MISSION_LOG", build = "v0.1.
               {displayName}
             </span>
           </MicroLabel>
+
+          {isAdmin && (
+            <Button variant="ghost" size="xs" asChild>
+              <Link to="/admin" className="display !text-[10px] text-accent">
+                ADMIN
+              </Link>
+            </Button>
+          )}
 
           <Button variant="ghost" size="sm" asChild>
             <a href="/auth/logout" className="display !text-[10px]">

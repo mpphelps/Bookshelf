@@ -27,9 +27,15 @@ export async function getTestSessionEmail(request: Request): Promise<string | nu
   return session?.email || null;
 }
 
-export async function createTestSessionHeaders(email: string): Promise<Headers> {
+export async function getTestSessionPermissions(request: Request): Promise<string[] | null> {
+  const cookieHeader = request.headers.get("Cookie");
+  const session = await sessionCookie.parse(cookieHeader);
+  return Array.isArray(session?.permissions) ? session.permissions : null;
+}
+
+export async function createTestSessionHeaders(email: string, permissions?: string[]): Promise<Headers> {
   const headers = new Headers();
-  headers.append("Set-Cookie", await sessionCookie.serialize({ email }));
+  headers.append("Set-Cookie", await sessionCookie.serialize({ email, permissions }));
   return headers;
 }
 

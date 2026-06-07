@@ -1,6 +1,6 @@
 import { ForbiddenError } from "~/lib/errors";
 import { exchangeCodeForTokens, verifyAccessToken, verifyIdToken } from "../lib/auth0.server";
-import { getSessionToken, getTestSessionEmail } from "../lib/session.server";
+import { getSessionToken, getTestSessionEmail, getTestSessionPermissions } from "../lib/session.server";
 import { userRepository } from "../repositories/user.repository.server";
 import { splitName } from "~/lib/name";
 
@@ -54,12 +54,13 @@ export async function getAuthenticatedUser(request: Request): Promise<AuthUser |
     if (!email) return null;
     const user = await userRepository.findByEmail(email);
     if (!user) return null;
+    const sessionPermissions = await getTestSessionPermissions(request);
     return {
       id: user.id,
       email: user.email,
       firstName: user.firstName,
       lastName: user.lastName,
-      permissions: ["read:books", "write:books", "read:notes", "write:notes"],
+      permissions: sessionPermissions ?? ["read:books", "write:books", "read:notes", "write:notes"],
     };
   }
 

@@ -10,6 +10,7 @@ import { TelemetryHeader } from "../components/shelves/telemetry-header";
 import type { AuthUser } from "../services/auth.service.server";
 import { getShelvesOverview } from "../services/book.service.server";
 import { withAuth } from "~/lib/with-auth";
+import { ADMIN_PERMISSION } from "~/lib/permissions";
 import { Link } from "react-router";
 import { Button } from "@bookshelf/ui/components/button";
 import { displayName } from "~/lib/name";
@@ -36,7 +37,7 @@ export default function Shelves({ loaderData }: Route.ComponentProps) {
 
   return (
     <div className="relative z-[2] min-h-screen">
-      <SystemHeader userName={displayName(user)} />
+      <SystemHeader userName={displayName(user)} isAdmin={user.permissions.includes(ADMIN_PERMISSION)} />
 
       <main id="main" className="mx-auto max-w-6xl px-6 py-12">
         <TelemetryHeader userName={displayName(user)} total={total} />

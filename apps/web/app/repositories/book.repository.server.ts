@@ -42,4 +42,11 @@ export const bookRepository = {
       where: { id: bookId },
     });
   },
+
+  async countByShelfAcrossUsers() {
+    return prisma.book.groupBy({
+      by: ["userId", "shelf"],
+      _count: true,
+    });
+  },
 };

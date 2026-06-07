@@ -342,6 +342,7 @@ Each migration flowed dev → CI → prod via the full pipeline, exercising the 
 - [x] Zod input validation — schemas co-located with services (`book.schemas.ts`, `note.schemas.ts`); actions `safeParse` at the boundary and pass typed input to services; services own business rules only. `firstErrorPerField` adapter in `lib/zod-errors.ts`.
 - [x] Security headers via `root.tsx`'s `headers` export — HSTS, CSP, X-Content-Type-Options, X-Frame-Options, Referrer-Policy, Permissions-Policy. Inline-script `'unsafe-inline'` documented as known CSP limitation (RR7 hydration needs nonces for full hardening).
 - [x] Accessibility pass — skip-to-content link in Layout; `id="main"` on landmark; `aria-hidden` on decorative arrows/ASCII; explicit `aria-label` on link-card components for clean screen-reader announcements. (Color contrast + reduced-motion deferred.)
+- [x] Admin panel — `/admin` route gated by `read:admin` permission via service-layer `requirePermission()`. Exercises the JWT-claims permission story end-to-end. New `admin.service.server.ts` composes `userRepository.listAll` + `bookRepository.countByShelfAcrossUsers` (single grouped query, no N+1). ADMIN link in `SystemHeader` only renders when user has the permission. E2E covers admin/non-admin/unauthed paths. Test bypass extended to pass permissions via session.
 
 ### Phase 6: Feature Enhancements
 

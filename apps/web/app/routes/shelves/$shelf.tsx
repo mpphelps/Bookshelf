@@ -5,6 +5,7 @@ import { SHELF_LABELS, type ShelfKey } from "~/lib/shelves";
 import { ShelfNotFoundError } from "~/lib/errors";
 import { makeRouteErrorBoundary } from "~/lib/error-boundary";
 import { withAuth } from "~/lib/with-auth";
+import { ADMIN_PERMISSION } from "~/lib/permissions";
 import type { Route } from "./+types/$shelf";
 
 import { BracketDivider } from "@bookshelf/ui/components/bracket-divider";
@@ -78,7 +79,7 @@ export default function ShelfRoute({ loaderData }: Route.ComponentProps) {
 
   return (
     <div className="relative z-[2] min-h-screen">
-      <SystemHeader userName={displayName(user)} section={`SHELF_LOG / ${shelfKey}`} />
+      <SystemHeader userName={displayName(user)} section={`SHELF_LOG / ${shelfKey}`} isAdmin={user.permissions.includes(ADMIN_PERMISSION)} />
 
       <main id="main" className="mx-auto max-w-6xl px-6 py-12">
         <div className="mb-8">

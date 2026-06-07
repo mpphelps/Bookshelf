@@ -9,10 +9,11 @@ export async function action({ request }: Route.ActionArgs) {
   }
 
   //console.log("[test-login] E2E_AUTH_BYPASS is enabled, proceeding with test login");
-  const { email, firstName, lastName } = (await request.json()) as {
+  const { email, firstName, lastName, permissions } = (await request.json()) as {
     email: string;
     firstName: string;
     lastName: string;
+    permissions?: string[];
   };
 
   // console.log("[test-login] Received test login request", { email, name, firstName, lastName });
@@ -32,7 +33,7 @@ export async function action({ request }: Route.ActionArgs) {
 
   // console.log("[test-login] Final user object", { user: { id: user.id, email: user.email } });
 
-  const headers = await createTestSessionHeaders(email);
+  const headers = await createTestSessionHeaders(email, permissions);
   headers.set("Content-Type", "application/json");
   return new Response(JSON.stringify({ user }), { status: 200, headers });
 }
