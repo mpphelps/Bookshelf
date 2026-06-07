@@ -12,4 +12,10 @@ export const userRepository = {
   async create(data: { email: string; firstName: string; lastName: string | null }) {
     return prisma.user.create({ data });
   },
+
+  async listAll() {
+    return prisma.user.findMany({
+      orderBy: { createdAt: "desc" },
+    });
+  },
 };

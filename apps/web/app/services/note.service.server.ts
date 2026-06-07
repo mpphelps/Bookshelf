@@ -1,7 +1,8 @@
 import { noteRepository } from "~/repositories/note.repository.server";
 import type { AuthUser } from "./auth.service.server";
 import { getBookForUser } from "./book.service.server";
-import { NoteNotFoundError, ValidationError } from "~/lib/errors";
+import { NoteNotFoundError } from "~/lib/errors";
+import { logger } from "~/lib/logger.server";
 
 export async function listNotesForBook(user: AuthUser, bookId: string) {
   const book = await getBookForUser(user, bookId);
@@ -12,15 +13,12 @@ export async function listNotesForBook(user: AuthUser, bookId: string) {
 export async function createNoteForBook(user: AuthUser, bookId: string, content: string) {
   const book = await getBookForUser(user, bookId);
 
-  const trimmed = content.trim();
-  if (trimmed.length === 0) {
-    throw new ValidationError({ content: "Note content cannot be empty" });
-  }
-
-  return noteRepository.create({
+  const note = await noteRepository.create({
     bookId: book.id,
-    content: trimmed,
+    content,
   });
+  logger.info({ userId: user.id, bookId: book.id, noteId: note.id, action: "note.create" }, "note created");
+  return note;
 }
 
 export async function getNoteForUser(user: AuthUser, noteId: string) {
@@ -30,25 +28,23 @@ export async function getNoteForUser(user: AuthUser, noteId: string) {
     throw new NoteNotFoundError(noteId);
   }
 
-  await getBookForUser(user, note.bookId); // reuses the book-ownership gate (throws Forbidden/NotFound)
+  await getBookForUser(user, note.bookId);
 
   return note;
 }
 
 export async function updateNote(user: AuthUser, noteId: string, content: string) {
-  const note = await getNoteForUser(user, noteId); // transitive ownership gate
+  const note = await getNoteForUser(user, noteId);
 
-  const trimmed = content.trim();
-  if (trimmed.length === 0) {
-    throw new ValidationError({ content: "Note content cannot be empty" });
-  }
-
-  return noteRepository.update(note.id, { content: trimmed });
+  const updated = await noteRepository.update(note.id, { content });
+  logger.info({ userId: user.id, noteId: note.id, bookId: note.bookId, action: "note.update" }, "note updated");
+  return updated;
 }
 
 export async function deleteNote(user: AuthUser, noteId: string) {
-  const note = await getNoteForUser(user, noteId); // transitive ownership gate
+  const note = await getNoteForUser(user, noteId);
 
   await noteRepository.delete(note.id);
+  logger.info({ userId: user.id, noteId: note.id, bookId: note.bookId, action: "note.delete" }, "note deleted");
   return note;
 }

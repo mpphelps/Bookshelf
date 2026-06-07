@@ -2,6 +2,8 @@ import { BookNotFoundError, ForbiddenError, ShelfNotFoundError, ValidationError 
 import { bookRepository } from "../repositories/book.repository.server";
 import type { AuthUser } from "./auth.service.server";
 import { SHELF_LABELS, type ShelfKey } from "~/lib/shelves";
+import { logger } from "~/lib/logger.server";
+import type { BookCreateInput, BookUpdateInput } from "./book.schemas";
 
 export async function getShelvesOverview(user: AuthUser) {
   const counts = await bookRepository.countByShelf(user.id);
@@ -39,85 +41,51 @@ export async function getBookForUser(user: AuthUser, bookId: string) {
   return book;
 }
 
-export async function createBook(user: AuthUser, input: { title: string; author: string; shelf: string }) {
-  const errors: Record<string, string> = {};
-  const title = input.title.trim();
-  const author = input.author.trim();
-  const authors = [author];
-
-  if (title.length === 0) errors.title = "Title is required";
-  if (author.length === 0) errors.author = "Author is required";
-  if (SHELF_LABELS[input.shelf as ShelfKey] === undefined) {
-    errors.shelf = "Invalid shelf";
-  }
-
-  if (Object.keys(errors).length > 0) {
-    throw new ValidationError(errors);
-  }
-
-  return bookRepository.create({
+export async function createBook(user: AuthUser, input: BookCreateInput) {
+  const book = await bookRepository.create({
     userId: user.id,
-    title,
-    authors,
-    shelf: input.shelf as ShelfKey,
+    title: input.title,
+    authors: [input.author],
+    shelf: input.shelf,
   });
+  logger.info({ userId: user.id, bookId: book.id, shelf: book.shelf, action: "book.create" }, "book created");
+  return book;
 }
 
-export async function updateBook(user: AuthUser, bookId: string, input: { title?: string; author?: string; shelf?: string }) {
+export async function updateBook(user: AuthUser, bookId: string, input: BookUpdateInput) {
   const book = await getBookForUser(user, bookId);
 
-  const errors: Record<string, string> = {};
-  const data: { title?: string; author?: string; authors?: string[]; shelf?: ShelfKey } = {};
-
-  if (input.title !== undefined) {
-    const title = input.title.trim();
-    if (title.length === 0) errors.title = "Title cannot be empty";
-    else data.title = title;
-  }
-
-  if (input.author !== undefined) {
-    const author = input.author.trim();
-    if (author.length === 0) errors.author = "Author cannot be empty";
-    else {
-      data.authors = [author];
-    }
-  }
-
-  if (input.shelf !== undefined) {
-    if (SHELF_LABELS[input.shelf as ShelfKey] === undefined) {
-      errors.shelf = "Invalid shelf";
-    } else {
-      data.shelf = input.shelf as ShelfKey;
-    }
-  }
-
-  if (Object.keys(errors).length > 0) {
-    throw new ValidationError(errors);
-  }
+  const data: { title?: string; authors?: string[]; shelf?: ShelfKey } = {};
+  if (input.title !== undefined) data.title = input.title;
+  if (input.author !== undefined) data.authors = [input.author];
+  if (input.shelf !== undefined) data.shelf = input.shelf;
 
   if (Object.keys(data).length === 0) {
-    return book; // nothing to change — no-op
+    return book;
   }
 
-  return bookRepository.update(book.id, data);
+  const updated = await bookRepository.update(book.id, data);
+  logger.info({ userId: user.id, bookId: book.id, fields: Object.keys(data), action: "book.update" }, "book updated");
+  return updated;
 }
 
 export async function deleteBook(user: AuthUser, bookId: string) {
-  const book = await getBookForUser(user, bookId); // ownership gate
+  const book = await getBookForUser(user, bookId);
 
   await bookRepository.delete(book.id);
+  logger.info({ userId: user.id, bookId: book.id, action: "book.delete" }, "book deleted");
   return book;
 }
 
 export async function rateBook(user: AuthUser, bookId: string, rating: number) {
-  const book = await getBookForUser(user, bookId); // ownership FIRST
+  const book = await getBookForUser(user, bookId);
 
   if (book.shelf !== "FINISHED") {
+    logger.warn({ userId: user.id, bookId, shelf: book.shelf, action: "book.rate" }, "rating rejected: not on FINISHED shelf");
     throw new ValidationError({ rating: "Can only rate finished books" });
   }
-  if (rating < 1 || rating > 5) {
-    throw new ValidationError({ rating: "Rating must be between 1 and 5" });
-  }
 
-  return bookRepository.update(book.id, { rating });
+  const updated = await bookRepository.update(book.id, { rating });
+  logger.info({ userId: user.id, bookId, rating, action: "book.rate" }, "book rated");
+  return updated;
 }

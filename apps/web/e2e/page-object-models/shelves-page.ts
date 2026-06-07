@@ -36,9 +36,9 @@ export class ShelvesPage extends BasePage {
   }
 
   private async expectShelfCount(shelfLabel: string, count: number) {
-    const card = this.page.getByRole("link").filter({
-      has: this.page.getByRole("heading", { level: 2, name: shelfLabel, exact: true }),
-    });
-    await expect(card.getByLabel(`${count} books`, { exact: true })).toBeVisible();
+    const noun = count === 1 ? "volume" : "volumes";
+    await expect(
+      this.page.getByRole("link", { name: `Open ${shelfLabel} shelf, ${count} ${noun}`, exact: true }),
+    ).toBeVisible();
   }
 }

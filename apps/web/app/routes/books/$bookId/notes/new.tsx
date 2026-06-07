@@ -1,40 +1,40 @@
 import { redirect, useActionData, useParams } from "react-router";
-import { getAuthenticatedUser } from "~/services/auth.service.server";
+import type { AuthUser } from "~/services/auth.service.server";
 import { createNoteForBook } from "~/services/note.service.server";
-import { BookNotFoundError, ForbiddenError, ValidationError } from "~/lib/errors";
+import { NoteContentSchema } from "~/services/note.schemas";
+import { BookNotFoundError, ForbiddenError } from "~/lib/errors";
 import { makeModalErrorBoundary } from "~/lib/error-boundary";
+import { withAuth } from "~/lib/with-auth";
+import { firstErrorPerField } from "~/lib/zod-errors";
 import type { Route } from "./+types/new";
 
 import { NoteFormModal } from "~/components/books/note-form-modal";
 
 export const meta: Route.MetaFunction = () => [{ title: "Add a note — Bookshelf" }];
 
-export async function loader({ request }: Route.LoaderArgs) {
-  const user = await getAuthenticatedUser(request);
-  if (!user) return redirect("/auth/login");
+export const loader = withAuth(async ({ user }: Route.LoaderArgs & { user: AuthUser }) => {
   return { user };
-}
+});
 
-export async function action({ request, params }: Route.ActionArgs) {
-  const user = await getAuthenticatedUser(request);
-  if (!user) return redirect("/auth/login");
-
+export const action = withAuth(async ({ request, params, user }: Route.ActionArgs & { user: AuthUser }) => {
   const formData = await request.formData();
-  const content = String(formData.get("content") ?? "");
+  const raw = { content: formData.get("content")?.toString() ?? "" };
+
+  const parsed = NoteContentSchema.safeParse(raw);
+  if (!parsed.success) {
+    return { errors: firstErrorPerField(parsed.error), values: raw };
+  }
 
   try {
-    await createNoteForBook(user, params.bookId, content);
+    await createNoteForBook(user, params.bookId, parsed.data.content);
     return redirect(`/books/${params.bookId}`);
   } catch (error) {
-    if (error instanceof ValidationError) {
-      return { errors: error.fields, values: { content } };
-    }
     if (error instanceof BookNotFoundError || error instanceof ForbiddenError) {
       throw new Response(error.message, { status: error.status });
     }
     throw error;
   }
-}
+});
 
 export const ErrorBoundary = makeModalErrorBoundary({
   getReturnTo: (params) => `/books/${params.bookId ?? ""}`,

@@ -9,6 +9,7 @@ export default [
     route("notes/new", "routes/books/$bookId/notes/new.tsx"),
     route("notes/:noteId/edit", "routes/books/$bookId/notes/$noteId/edit.tsx"),
   ]),
+  route("admin", "routes/admin.tsx"),
   route("health", "routes/health.tsx"),
   route("robots.txt", "routes/robots.ts"),
   route("sitemap.xml", "routes/sitemap.ts"),

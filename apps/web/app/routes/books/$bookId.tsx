@@ -1,10 +1,14 @@
 import { Form, Link, Outlet, redirect } from "react-router";
-import { getAuthenticatedUser } from "~/services/auth.service.server";
 import { deleteBook, rateBook, updateBook } from "~/services/book.service.server";
 import { deleteNote, listNotesForBook } from "~/services/note.service.server";
 import { SHELF_LABELS, type ShelfKey } from "~/lib/shelves";
 import { BookNotFoundError, ForbiddenError, NoteNotFoundError, ValidationError } from "~/lib/errors";
 import { makeRouteErrorBoundary } from "~/lib/error-boundary";
+import { withAuth } from "~/lib/with-auth";
+import { ADMIN_PERMISSION } from "~/lib/permissions";
+import { BookUpdateSchema, RatingSchema } from "~/services/book.schemas";
+import { firstErrorPerField } from "~/lib/zod-errors";
+import type { AuthUser } from "~/services/auth.service.server";
 import type { Route } from "./+types/$bookId";
 
 import { BracketDivider } from "@bookshelf/ui/components/bracket-divider";
@@ -40,16 +44,10 @@ const SHELF_STATUS: Record<ShelfKey, ShelfStatusMeta> = {
 export const meta: Route.MetaFunction = ({ data }) => {
   if (!data) return [{ title: "Book — Bookshelf" }];
   const authors = data.book.authors.join(", ");
-  return [
-    { title: `${data.book.title} — Bookshelf` },
-    { name: "description", content: `${data.book.title} by ${authors}.` },
-  ];
+  return [{ title: `${data.book.title} — Bookshelf` }, { name: "description", content: `${data.book.title} by ${authors}.` }];
 };
 
-export async function loader({ request, params }: Route.LoaderArgs) {
-  const user = await getAuthenticatedUser(request);
-  if (!user) return redirect("/auth/login");
-
+export const loader = withAuth(async ({ user, params }: Route.LoaderArgs & { user: AuthUser }) => {
   try {
     const { book, notes } = await listNotesForBook(user, params.bookId);
     return { user, book, notes };
@@ -59,24 +57,27 @@ export async function loader({ request, params }: Route.LoaderArgs) {
     }
     throw error;
   }
-}
+});
 
-export async function action({ request, params }: Route.ActionArgs) {
-  const user = await getAuthenticatedUser(request);
-  if (!user) return redirect("/auth/login");
-
+export const action = withAuth(async ({ user, request, params }: Route.ActionArgs & { user: AuthUser }) => {
   const formData = await request.formData();
   const intent = String(formData.get("intent") ?? "");
 
   try {
     if (intent === "move-shelf") {
-      const shelf = String(formData.get("shelf") ?? "");
-      await updateBook(user, params.bookId, { shelf });
+      const parsed = BookUpdateSchema.safeParse({ shelf: formData.get("shelf")?.toString() });
+      if (!parsed.success) {
+        return { errors: firstErrorPerField(parsed.error) };
+      }
+      await updateBook(user, params.bookId, parsed.data);
       return { ok: true };
     }
     if (intent === "rate-book") {
-      const rating = Number(formData.get("rating") ?? "");
-      await rateBook(user, params.bookId, rating);
+      const parsed = RatingSchema.safeParse({ rating: formData.get("rating")?.toString() });
+      if (!parsed.success) {
+        return { errors: firstErrorPerField(parsed.error) };
+      }
+      await rateBook(user, params.bookId, parsed.data.rating);
       return { ok: true };
     }
     if (intent === "delete-book") {
@@ -98,7 +99,7 @@ export async function action({ request, params }: Route.ActionArgs) {
     }
     throw error;
   }
-}
+});
 
 export const ErrorBoundary = makeRouteErrorBoundary({
   microLabel: "record sealed",
@@ -117,9 +118,9 @@ export default function BookDetailRoute({ loaderData, actionData }: Route.Compon
 
   return (
     <div className="relative z-[2] min-h-screen">
-      <SystemHeader userName={displayName(user)} section={`VOL / ${specimenId}`} />
+      <SystemHeader userName={displayName(user)} section={`VOL / ${specimenId}`} isAdmin={user.permissions.includes(ADMIN_PERMISSION)} />
 
-      <main className="mx-auto max-w-6xl px-6 py-12">
+      <main id="main" className="mx-auto max-w-6xl px-6 py-12">
         <div className="mb-8">
           <BackLink to={`/shelves/${book.shelf.toLowerCase()}`}>{shelfLabel.toUpperCase()} SHELF</BackLink>
         </div>

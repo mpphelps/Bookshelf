@@ -30,7 +30,7 @@ export function ShelfCard({
 }: ShelfCardProps) {
   return (
     <Panel asChild interactive surface="card" padding="md" className="group">
-      <Link to={to}>
+      <Link to={to} aria-label={`Open ${shelfLabel} shelf, ${count} ${count === 1 ? "volume" : "volumes"}`}>
         <div className="flex items-center justify-between mb-8">
           <MicroLabel>
             SLOT_{slotIndex.toString().padStart(2, "0")}
@@ -57,17 +57,14 @@ export function ShelfCard({
           {shelfLabel}
         </DisplayHeading>
 
-        <div className="flex items-baseline gap-3 mb-8">
-          <span
-            className="font-mono text-5xl md:text-6xl font-light text-primary tabular-nums leading-none"
-            aria-label={`${count} books`}
-          >
+        <div className="flex items-baseline gap-3 mb-8" aria-hidden="true">
+          <span className="font-mono text-5xl md:text-6xl font-light text-primary tabular-nums leading-none">
             {formatCount(count)}
           </span>
           <MicroLabel>vols</MicroLabel>
         </div>
 
-        <div className="flex items-center justify-between text-xs pt-4 border-t border-border/50">
+        <div className="flex items-center justify-between text-xs pt-4 border-t border-border/50" aria-hidden="true">
           <MicroLabel className="group-hover:!text-primary transition-colors">
             open log
           </MicroLabel>

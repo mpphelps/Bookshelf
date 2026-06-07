@@ -11,7 +11,7 @@ export function BackLink({ to, children }: BackLinkProps) {
       to={to}
       className="display inline-flex items-center gap-2 text-[10px] tracking-[0.2em] text-muted-foreground hover:text-primary transition-colors"
     >
-      <span>←</span> {children}
+      <span aria-hidden="true">←</span> {children}
     </Link>
   );
 }

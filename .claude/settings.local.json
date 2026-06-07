@@ -18,7 +18,8 @@
       "Bash(grep -oE \"hover\\\\\\\\\\\\\\\\:[a-zA-Z_/\\\\[\\\\]\\\\\\\\\\\\\\\\\\\\.0-9-]+\" apps/web/build/client/assets/root-VqoXik-0.css)",
       "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\Michael\\\\Desktop\\\\Software_Development\\\\Dev\\\\Bookshelf\" -Directory)",
       "Bash(Select-Object Name)",
-      "Bash(git diff *)"
+      "Bash(git diff *)",
+      "Bash(npx tsc *)"
     ]
   }
 }

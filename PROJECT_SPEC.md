@@ -332,12 +332,18 @@ Each migration flowed dev → CI → prod via the full pipeline, exercising the 
 
 **Open follow-up (deferred):** Auth0 database-connection signups (email + password) don't collect `firstName`/`lastName` by default — current behavior falls back to `splitName(name)`, which puts the email address into `firstName` for users who never provided a name. Profile-edit flow (Phase 6.6) addresses this.
 
-### Phase 5: Polish & Advanced (in progress)
+### Phase 5: Polish & Advanced ✅ (closed 2026-06-07)
 
 - [x] Error boundaries — root-level catch-all + per-route boundaries via factory (`makeRouteErrorBoundary` / `makeModalErrorBoundary`); status-keyed default copy via `ErrorLookup` in `lib/errors.ts`
 - 🚫 Optimistic UI — skipped. Existing `<Form>` submissions are idempotent and the Submit button already handles in-flight cancellation; no pain point worth solving.
 - [x] SEO: root + per-route `meta` exports (title, description, OG, Twitter card); `routes/robots.ts` allows `/` and disallows auth/private paths; `routes/sitemap.ts` lists `/` only (user content is auth-gated)
-- [ ] Performance pass: bundle analysis, image optimization for book covers
+- [x] Performance pass — baseline ~135 KB gzipped client total (entry 59 KB, shared chunk 42 KB). Radix Dialog already route-split via modal chunks; no actionable wins. Image optimization deferred to land with 6.1 (Open Library covers).
+- [x] `withAuth` HOF — centralizes auth gate for every protected loader + action; injects `user` so handlers receive `{ request, params, user }` already validated. Lives in `apps/web/app/lib/with-auth.ts`.
+- [x] Zod input validation — schemas co-located with services (`book.schemas.ts`, `note.schemas.ts`); actions `safeParse` at the boundary and pass typed input to services; services own business rules only. `firstErrorPerField` adapter in `lib/zod-errors.ts`.
+- [x] Security headers via `root.tsx`'s `headers` export — HSTS, CSP, X-Content-Type-Options, X-Frame-Options, Referrer-Policy, Permissions-Policy. Inline-script `'unsafe-inline'` documented as known CSP limitation (RR7 hydration needs nonces for full hardening).
+- [x] Accessibility pass — skip-to-content link in Layout; `id="main"` on landmark; `aria-hidden` on decorative arrows/ASCII; explicit `aria-label` on link-card components for clean screen-reader announcements. (Color contrast + reduced-motion deferred.)
+- [x] Admin panel — `/admin` route gated by `read:admin` permission via service-layer `requirePermission()`. Exercises the JWT-claims permission story end-to-end. New `admin.service.server.ts` composes `userRepository.listAll` + `bookRepository.countByShelfAcrossUsers` (single grouped query, no N+1). ADMIN link in `SystemHeader` only renders when user has the permission. E2E covers admin/non-admin/unauthed paths. Test bypass extended to pass permissions via session.
+- [x] Structured logging with pino — singleton `logger.server.ts`; pretty in dev, JSON in prod; `LOG_LEVEL` env override. Wired at service mutation boundaries (`book.*`, `note.*`) + `auth.permission_denied`. Each line carries `userId` + entity id + `action` tag so prod logs can be grepped via `docker logs ... | grep '"action":"book.delete"'`.
 
 ### Phase 6: Feature Enhancements
 
@@ -354,6 +360,7 @@ Two async, multi-step features that share Temporal for orchestration. Detailed d
 
 - [ ] 7.1: Photo → "Want to Read" — upload or capture a shelf image; OCR + AI extract candidates; Open Library matches; user confirms; bulk-add to WANT_TO_READ. Temporal handles the async pipeline. Learning: image handling, OCR/vision AI, Temporal workflows. Depends on 6.1.
 - [ ] 7.2: Weekly progress email — Temporal cron fans out per user; personal stats + friend activity; React Email templates; one-click unsubscribe. Learning: transactional email + deliverability, basic analytics, Temporal cron/fan-out. Depends on 6.4.
+- [ ] 7.3: Self-hosted Plausible analytics on the Pi — Plausible + ClickHouse + Postgres containers in `docker-compose.prod.yml`, Cloudflare Tunnel route for `stats.readingbookshelf.com`, tracker script in `root.tsx`, CSP allowlist update. Learning: side-by-side service deploy, cohabitation on shared Pi, third-party CSP, optional custom-event tracking.
 - [ ] Shared prerequisites: `Book.pageCount`/`isbn`/`coverUrl` (populated by 6.1), Temporal hosting (Pi self-host vs Cloud), `BookEvent` activity log written from the service layer.
 
 ---
