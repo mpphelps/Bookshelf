@@ -5,6 +5,8 @@ import { SHELF_LABELS, type ShelfKey } from "~/lib/shelves";
 import { BookNotFoundError, ForbiddenError, NoteNotFoundError, ValidationError } from "~/lib/errors";
 import { makeRouteErrorBoundary } from "~/lib/error-boundary";
 import { withAuth } from "~/lib/with-auth";
+import { BookUpdateSchema, RatingSchema } from "~/services/book.schemas";
+import { firstErrorPerField } from "~/lib/zod-errors";
 import type { AuthUser } from "~/services/auth.service.server";
 import type { Route } from "./+types/$bookId";
 
@@ -62,13 +64,19 @@ export const action = withAuth(async ({ user, request, params }: Route.ActionArg
 
   try {
     if (intent === "move-shelf") {
-      const shelf = String(formData.get("shelf") ?? "");
-      await updateBook(user, params.bookId, { shelf });
+      const parsed = BookUpdateSchema.safeParse({ shelf: formData.get("shelf")?.toString() });
+      if (!parsed.success) {
+        return { errors: firstErrorPerField(parsed.error) };
+      }
+      await updateBook(user, params.bookId, parsed.data);
       return { ok: true };
     }
     if (intent === "rate-book") {
-      const rating = Number(formData.get("rating") ?? "");
-      await rateBook(user, params.bookId, rating);
+      const parsed = RatingSchema.safeParse({ rating: formData.get("rating")?.toString() });
+      if (!parsed.success) {
+        return { errors: firstErrorPerField(parsed.error) };
+      }
+      await rateBook(user, params.bookId, parsed.data.rating);
       return { ok: true };
     }
     if (intent === "delete-book") {

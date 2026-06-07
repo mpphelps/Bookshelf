@@ -1,9 +1,11 @@
 import { redirect, useActionData, useParams } from "react-router";
 import type { AuthUser } from "~/services/auth.service.server";
 import { getNoteForUser, updateNote } from "~/services/note.service.server";
-import { ForbiddenError, NoteNotFoundError, ValidationError } from "~/lib/errors";
+import { NoteContentSchema } from "~/services/note.schemas";
+import { ForbiddenError, NoteNotFoundError } from "~/lib/errors";
 import { makeModalErrorBoundary } from "~/lib/error-boundary";
 import { withAuth } from "~/lib/with-auth";
+import { firstErrorPerField } from "~/lib/zod-errors";
 import type { Route } from "./+types/edit";
 
 import { NoteFormModal } from "~/components/books/note-form-modal";
@@ -24,15 +26,17 @@ export const loader = withAuth(async ({ user, params }: Route.LoaderArgs & { use
 
 export const action = withAuth(async ({ request, params, user }: Route.ActionArgs & { user: AuthUser }) => {
   const formData = await request.formData();
-  const content = String(formData.get("content") ?? "");
+  const raw = { content: formData.get("content")?.toString() ?? "" };
+
+  const parsed = NoteContentSchema.safeParse(raw);
+  if (!parsed.success) {
+    return { errors: firstErrorPerField(parsed.error), values: raw };
+  }
 
   try {
-    await updateNote(user, params.noteId, content);
+    await updateNote(user, params.noteId, parsed.data.content);
     return redirect(`/books/${params.bookId}`);
   } catch (error) {
-    if (error instanceof ValidationError) {
-      return { errors: error.fields, values: { content } };
-    }
     if (error instanceof NoteNotFoundError || error instanceof ForbiddenError) {
       throw new Response(error.message, { status: error.status });
     }

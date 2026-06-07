@@ -1,8 +1,9 @@
 import { Form, redirect, useActionData } from "react-router";
 import type { AuthUser } from "~/services/auth.service.server";
 import { createBook } from "~/services/book.service.server";
-import { ValidationError } from "~/lib/errors";
+import { BookCreateSchema } from "~/services/book.schemas";
 import { makeModalErrorBoundary } from "~/lib/error-boundary";
+import { firstErrorPerField } from "~/lib/zod-errors";
 import type { Route } from "./+types/new";
 
 import { Button } from "@bookshelf/ui/components/button";
@@ -20,21 +21,19 @@ export const loader = withAuth(async ({ user }: Route.LoaderArgs & { user: AuthU
 
 export const action = withAuth(async ({ request, user }: Route.ActionArgs & { user: AuthUser }) => {
   const formData = await request.formData();
-  const input = {
+  const raw = {
     title: formData.get("title")?.toString() ?? "",
     author: formData.get("author")?.toString() ?? "",
     shelf: formData.get("shelf")?.toString() ?? "",
   };
 
-  try {
-    const book = await createBook(user, input);
-    return redirect(`/shelves/${book.shelf.toLowerCase()}`);
-  } catch (error) {
-    if (error instanceof ValidationError) {
-      return { errors: error.fields, values: input };
-    }
-    throw error;
+  const parsed = BookCreateSchema.safeParse(raw);
+  if (!parsed.success) {
+    return { errors: firstErrorPerField(parsed.error), values: raw };
   }
+
+  const book = await createBook(user, parsed.data);
+  return redirect(`/shelves/${book.shelf.toLowerCase()}`);
 });
 
 export const ErrorBoundary = makeModalErrorBoundary({
