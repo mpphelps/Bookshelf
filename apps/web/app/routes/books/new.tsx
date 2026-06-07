@@ -68,9 +68,15 @@ export default function NewBook() {
           )}
         </label>
 
-        <label className="flex flex-col gap-1 text-sm">
-          Shelf
-          <Select name="shelf" defaultValue={values?.shelf ?? "WANT_TO_READ"} aria-invalid={!!errors?.shelf} required>
+        <div className="flex flex-col gap-1 text-sm">
+          <label htmlFor="new-book-shelf">Shelf</label>
+          <Select
+            id="new-book-shelf"
+            name="shelf"
+            defaultValue={values?.shelf ?? "WANT_TO_READ"}
+            aria-invalid={!!errors?.shelf}
+            required
+          >
             <option value="WANT_TO_READ">Want to Read</option>
             <option value="READING">Reading</option>
             <option value="FINISHED">Finished</option>
@@ -80,7 +86,7 @@ export default function NewBook() {
               {errors.shelf}
             </p>
           )}
-        </label>
+        </div>
 
         <div className="mt-2 flex justify-end gap-2">
           <RouteModalCancel />

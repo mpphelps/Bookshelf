@@ -15,7 +15,7 @@ export class NewBookPage extends BasePage {
   }
 
   async selectShelf(shelf: string) {
-    await this.page.getByLabel("Shelf").selectOption(shelf);
+    await this.page.getByLabel("Shelf", { exact: true }).selectOption(shelf);
   }
 
   async fillForm(book: { title?: string; author?: string; shelf?: string }) {
