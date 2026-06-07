@@ -26,7 +26,7 @@ export function RouteErrorPanel({
 
   return (
     <div className="relative z-[2] min-h-screen">
-      <main className="mx-auto max-w-3xl px-6 py-24">
+      <main id="main" className="mx-auto max-w-3xl px-6 py-24">
         <Panel padding="lg" surface="card" role="alert">
           <MicroLabel tone="primary" className="mb-4 block">
             ▸ {microLabel || defaultMicroLabel}

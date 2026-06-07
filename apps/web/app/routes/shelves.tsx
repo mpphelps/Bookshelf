@@ -38,7 +38,7 @@ export default function Shelves({ loaderData }: Route.ComponentProps) {
     <div className="relative z-[2] min-h-screen">
       <SystemHeader userName={displayName(user)} />
 
-      <main className="mx-auto max-w-6xl px-6 py-12">
+      <main id="main" className="mx-auto max-w-6xl px-6 py-12">
         <TelemetryHeader userName={displayName(user)} total={total} />
 
         {/* <BracketDivider className="mb-10" label="shelves" trailing={`${shelves.length} categories`} /> */}

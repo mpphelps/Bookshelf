@@ -17,9 +17,14 @@ type BookListItemProps = {
 export function BookListItem({ to, slotIndex, title, authors, rating }: BookListItemProps) {
   const slot = (slotIndex + 1).toString().padStart(3, "0");
 
+  const ratingText = rating !== null ? `, rated ${rating} of 5` : ", unrated";
   return (
     <Panel asChild interactive surface="card" padding="md" className="group">
-      <Link to={to} className="grid grid-cols-12 items-center gap-4">
+      <Link
+        to={to}
+        aria-label={`Open ${title} by ${authors.join(", ")}${ratingText}`}
+        className="grid grid-cols-12 items-center gap-4"
+      >
         <div className="col-span-12 md:col-span-1">
           <MicroLabel className="font-mono">SLOT_{slot}</MicroLabel>
         </div>
@@ -42,7 +47,7 @@ export function BookListItem({ to, slotIndex, title, authors, rating }: BookList
         </div>
 
         <div className="col-span-2 md:col-span-1 md:text-right">
-          <span className="font-mono text-primary transition-transform group-hover:translate-x-1 inline-block">→</span>
+          <span aria-hidden="true" className="font-mono text-primary transition-transform group-hover:translate-x-1 inline-block">→</span>
         </div>
       </Link>
     </Panel>

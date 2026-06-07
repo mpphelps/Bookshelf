@@ -80,7 +80,7 @@ export default function ShelfRoute({ loaderData }: Route.ComponentProps) {
     <div className="relative z-[2] min-h-screen">
       <SystemHeader userName={displayName(user)} section={`SHELF_LOG / ${shelfKey}`} />
 
-      <main className="mx-auto max-w-6xl px-6 py-12">
+      <main id="main" className="mx-auto max-w-6xl px-6 py-12">
         <div className="mb-8">
           <BackLink to="/">MISSION_LOG</BackLink>
         </div>
