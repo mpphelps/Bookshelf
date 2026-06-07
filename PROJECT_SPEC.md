@@ -339,6 +339,8 @@ Each migration flowed dev → CI → prod via the full pipeline, exercising the 
 - [x] SEO: root + per-route `meta` exports (title, description, OG, Twitter card); `routes/robots.ts` allows `/` and disallows auth/private paths; `routes/sitemap.ts` lists `/` only (user content is auth-gated)
 - [x] Performance pass — baseline ~135 KB gzipped client total (entry 59 KB, shared chunk 42 KB). Radix Dialog already route-split via modal chunks; no actionable wins. Image optimization deferred to land with 6.1 (Open Library covers).
 - [x] `withAuth` HOF — centralizes auth gate for every protected loader + action; injects `user` so handlers receive `{ request, params, user }` already validated. Lives in `apps/web/app/lib/with-auth.ts`.
+- [x] Zod input validation — schemas co-located with services (`book.schemas.ts`, `note.schemas.ts`); actions `safeParse` at the boundary and pass typed input to services; services own business rules only. `firstErrorPerField` adapter in `lib/zod-errors.ts`.
+- [x] Security headers via `root.tsx`'s `headers` export — HSTS, CSP, X-Content-Type-Options, X-Frame-Options, Referrer-Policy, Permissions-Policy. Inline-script `'unsafe-inline'` documented as known CSP limitation (RR7 hydration needs nonces for full hardening).
 
 ### Phase 6: Feature Enhancements
 
