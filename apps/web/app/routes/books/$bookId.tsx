@@ -1,10 +1,11 @@
 import { Form, Link, Outlet, redirect } from "react-router";
-import { getAuthenticatedUser } from "~/services/auth.service.server";
 import { deleteBook, rateBook, updateBook } from "~/services/book.service.server";
 import { deleteNote, listNotesForBook } from "~/services/note.service.server";
 import { SHELF_LABELS, type ShelfKey } from "~/lib/shelves";
 import { BookNotFoundError, ForbiddenError, NoteNotFoundError, ValidationError } from "~/lib/errors";
 import { makeRouteErrorBoundary } from "~/lib/error-boundary";
+import { withAuth } from "~/lib/with-auth";
+import type { AuthUser } from "~/services/auth.service.server";
 import type { Route } from "./+types/$bookId";
 
 import { BracketDivider } from "@bookshelf/ui/components/bracket-divider";
@@ -40,16 +41,10 @@ const SHELF_STATUS: Record<ShelfKey, ShelfStatusMeta> = {
 export const meta: Route.MetaFunction = ({ data }) => {
   if (!data) return [{ title: "Book — Bookshelf" }];
   const authors = data.book.authors.join(", ");
-  return [
-    { title: `${data.book.title} — Bookshelf` },
-    { name: "description", content: `${data.book.title} by ${authors}.` },
-  ];
+  return [{ title: `${data.book.title} — Bookshelf` }, { name: "description", content: `${data.book.title} by ${authors}.` }];
 };
 
-export async function loader({ request, params }: Route.LoaderArgs) {
-  const user = await getAuthenticatedUser(request);
-  if (!user) return redirect("/auth/login");
-
+export const loader = withAuth(async ({ user, params }: Route.LoaderArgs & { user: AuthUser }) => {
   try {
     const { book, notes } = await listNotesForBook(user, params.bookId);
     return { user, book, notes };
@@ -59,12 +54,9 @@ export async function loader({ request, params }: Route.LoaderArgs) {
     }
     throw error;
   }
-}
+});
 
-export async function action({ request, params }: Route.ActionArgs) {
-  const user = await getAuthenticatedUser(request);
-  if (!user) return redirect("/auth/login");
-
+export const action = withAuth(async ({ user, request, params }: Route.ActionArgs & { user: AuthUser }) => {
   const formData = await request.formData();
   const intent = String(formData.get("intent") ?? "");
 
@@ -98,7 +90,7 @@ export async function action({ request, params }: Route.ActionArgs) {
     }
     throw error;
   }
-}
+});
 
 export const ErrorBoundary = makeRouteErrorBoundary({
   microLabel: "record sealed",

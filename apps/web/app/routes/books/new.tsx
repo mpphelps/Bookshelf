@@ -1,5 +1,5 @@
 import { Form, redirect, useActionData } from "react-router";
-import { getAuthenticatedUser } from "~/services/auth.service.server";
+import type { AuthUser } from "~/services/auth.service.server";
 import { createBook } from "~/services/book.service.server";
 import { ValidationError } from "~/lib/errors";
 import { makeModalErrorBoundary } from "~/lib/error-boundary";
@@ -10,19 +10,15 @@ import { Input } from "@bookshelf/ui/components/input";
 import { Select } from "@bookshelf/ui/components/select";
 
 import { RouteModal, RouteModalCancel } from "~/components/layout/route-modal";
+import { withAuth } from "~/lib/with-auth";
 
 export const meta: Route.MetaFunction = () => [{ title: "Add a book — Bookshelf" }];
 
-export async function loader({ request }: Route.LoaderArgs) {
-  const user = await getAuthenticatedUser(request);
-  if (!user) return redirect("/auth/login");
+export const loader = withAuth(async ({ user }: Route.LoaderArgs & { user: AuthUser }) => {
   return { user };
-}
+});
 
-export async function action({ request }: Route.ActionArgs) {
-  const user = await getAuthenticatedUser(request);
-  if (!user) return redirect("/auth/login");
-
+export const action = withAuth(async ({ request, user }: Route.ActionArgs & { user: AuthUser }) => {
   const formData = await request.formData();
   const input = {
     title: formData.get("title")?.toString() ?? "",
@@ -39,7 +35,7 @@ export async function action({ request }: Route.ActionArgs) {
     }
     throw error;
   }
-}
+});
 
 export const ErrorBoundary = makeModalErrorBoundary({
   getReturnTo: () => "/",
@@ -55,44 +51,35 @@ export default function NewBook() {
       <Form method="post" noValidate className="flex flex-col gap-3">
         <label className="flex flex-col gap-1 text-sm">
           Title
-          <Input
-            name="title"
-            defaultValue={values?.title}
-            aria-invalid={!!errors?.title}
-            required
-          />
+          <Input name="title" defaultValue={values?.title} aria-invalid={!!errors?.title} required />
           {errors?.title && (
-            <p role="alert" className="text-xs text-destructive">{errors.title}</p>
+            <p role="alert" className="text-xs text-destructive">
+              {errors.title}
+            </p>
           )}
         </label>
 
         <label className="flex flex-col gap-1 text-sm">
           Author
-          <Input
-            name="author"
-            defaultValue={values?.author}
-            aria-invalid={!!errors?.author}
-            required
-          />
+          <Input name="author" defaultValue={values?.author} aria-invalid={!!errors?.author} required />
           {errors?.author && (
-            <p role="alert" className="text-xs text-destructive">{errors.author}</p>
+            <p role="alert" className="text-xs text-destructive">
+              {errors.author}
+            </p>
           )}
         </label>
 
         <label className="flex flex-col gap-1 text-sm">
           Shelf
-          <Select
-            name="shelf"
-            defaultValue={values?.shelf ?? "WANT_TO_READ"}
-            aria-invalid={!!errors?.shelf}
-            required
-          >
+          <Select name="shelf" defaultValue={values?.shelf ?? "WANT_TO_READ"} aria-invalid={!!errors?.shelf} required>
             <option value="WANT_TO_READ">Want to Read</option>
             <option value="READING">Reading</option>
             <option value="FINISHED">Finished</option>
           </Select>
           {errors?.shelf && (
-            <p role="alert" className="text-xs text-destructive">{errors.shelf}</p>
+            <p role="alert" className="text-xs text-destructive">
+              {errors.shelf}
+            </p>
           )}
         </label>
 

@@ -332,12 +332,13 @@ Each migration flowed dev → CI → prod via the full pipeline, exercising the 
 
 **Open follow-up (deferred):** Auth0 database-connection signups (email + password) don't collect `firstName`/`lastName` by default — current behavior falls back to `splitName(name)`, which puts the email address into `firstName` for users who never provided a name. Profile-edit flow (Phase 6.6) addresses this.
 
-### Phase 5: Polish & Advanced (in progress)
+### Phase 5: Polish & Advanced ✅
 
 - [x] Error boundaries — root-level catch-all + per-route boundaries via factory (`makeRouteErrorBoundary` / `makeModalErrorBoundary`); status-keyed default copy via `ErrorLookup` in `lib/errors.ts`
 - 🚫 Optimistic UI — skipped. Existing `<Form>` submissions are idempotent and the Submit button already handles in-flight cancellation; no pain point worth solving.
 - [x] SEO: root + per-route `meta` exports (title, description, OG, Twitter card); `routes/robots.ts` allows `/` and disallows auth/private paths; `routes/sitemap.ts` lists `/` only (user content is auth-gated)
-- [ ] Performance pass: bundle analysis, image optimization for book covers
+- [x] Performance pass — baseline ~135 KB gzipped client total (entry 59 KB, shared chunk 42 KB). Radix Dialog already route-split via modal chunks; no actionable wins. Image optimization deferred to land with 6.1 (Open Library covers).
+- [x] `withAuth` HOF — centralizes auth gate for every protected loader + action; injects `user` so handlers receive `{ request, params, user }` already validated. Lives in `apps/web/app/lib/with-auth.ts`.
 
 ### Phase 6: Feature Enhancements
 

@@ -1,18 +1,16 @@
 import { redirect, useActionData, useParams } from "react-router";
-import { getAuthenticatedUser } from "~/services/auth.service.server";
+import type { AuthUser } from "~/services/auth.service.server";
 import { getNoteForUser, updateNote } from "~/services/note.service.server";
 import { ForbiddenError, NoteNotFoundError, ValidationError } from "~/lib/errors";
 import { makeModalErrorBoundary } from "~/lib/error-boundary";
+import { withAuth } from "~/lib/with-auth";
 import type { Route } from "./+types/edit";
 
 import { NoteFormModal } from "~/components/books/note-form-modal";
 
 export const meta: Route.MetaFunction = () => [{ title: "Edit note — Bookshelf" }];
 
-export async function loader({ request, params }: Route.LoaderArgs) {
-  const user = await getAuthenticatedUser(request);
-  if (!user) return redirect("/auth/login");
-
+export const loader = withAuth(async ({ user, params }: Route.LoaderArgs & { user: AuthUser }) => {
   try {
     const note = await getNoteForUser(user, params.noteId);
     return { note };
@@ -22,12 +20,9 @@ export async function loader({ request, params }: Route.LoaderArgs) {
     }
     throw error;
   }
-}
+});
 
-export async function action({ request, params }: Route.ActionArgs) {
-  const user = await getAuthenticatedUser(request);
-  if (!user) return redirect("/auth/login");
-
+export const action = withAuth(async ({ request, params, user }: Route.ActionArgs & { user: AuthUser }) => {
   const formData = await request.formData();
   const content = String(formData.get("content") ?? "");
 
@@ -43,7 +38,7 @@ export async function action({ request, params }: Route.ActionArgs) {
     }
     throw error;
   }
-}
+});
 
 export const ErrorBoundary = makeModalErrorBoundary({
   getReturnTo: (params) => `/books/${params.bookId ?? ""}`,

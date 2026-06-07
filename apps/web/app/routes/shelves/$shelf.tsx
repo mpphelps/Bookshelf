@@ -1,9 +1,10 @@
-import { Link, redirect } from "react-router";
-import { getAuthenticatedUser } from "~/services/auth.service.server";
+import { Link } from "react-router";
+import type { AuthUser } from "~/services/auth.service.server";
 import { getBooksOnShelf } from "~/services/book.service.server";
 import { SHELF_LABELS, type ShelfKey } from "~/lib/shelves";
 import { ShelfNotFoundError } from "~/lib/errors";
 import { makeRouteErrorBoundary } from "~/lib/error-boundary";
+import { withAuth } from "~/lib/with-auth";
 import type { Route } from "./+types/$shelf";
 
 import { BracketDivider } from "@bookshelf/ui/components/bracket-divider";
@@ -48,13 +49,8 @@ export const meta: Route.MetaFunction = ({ params }) => {
   ];
 };
 
-export async function loader({ request, params }: Route.LoaderArgs) {
-  const user = await getAuthenticatedUser(request);
+export const loader = withAuth(async ({ user, params }: Route.LoaderArgs & { user: AuthUser }) => {
   const shelfKey = params.shelf.toUpperCase();
-
-  if (!user) {
-    return redirect("/auth/login");
-  }
 
   try {
     const books = await getBooksOnShelf(user, shelfKey);
@@ -65,7 +61,7 @@ export async function loader({ request, params }: Route.LoaderArgs) {
     }
     throw error;
   }
-}
+});
 
 export const ErrorBoundary = makeRouteErrorBoundary({
   microLabel: "signal lost",
