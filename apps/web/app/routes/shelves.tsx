@@ -13,6 +13,11 @@ import { Link } from "react-router";
 import { Button } from "@bookshelf/ui/components/button";
 import { displayName } from "~/lib/name";
 
+export const meta: Route.MetaFunction = () => [
+  { title: "Your Shelves — Bookshelf" },
+  { name: "description", content: "Your three reading shelves: Want to Read, Reading, and Finished." },
+];
+
 export async function loader({ request }: Route.LoaderArgs) {
   const user = await getAuthenticatedUser(request);
   if (!user) {

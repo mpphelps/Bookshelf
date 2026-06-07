@@ -37,6 +37,15 @@ const SHELF_STATUS: Record<ShelfKey, ShelfStatusMeta> = {
   FINISHED: { label: "ARCHIVED", tone: "accent", pulsing: false },
 };
 
+export const meta: Route.MetaFunction = ({ data }) => {
+  if (!data) return [{ title: "Book — Bookshelf" }];
+  const authors = data.book.authors.join(", ");
+  return [
+    { title: `${data.book.title} — Bookshelf` },
+    { name: "description", content: `${data.book.title} by ${authors}.` },
+  ];
+};
+
 export async function loader({ request, params }: Route.LoaderArgs) {
   const user = await getAuthenticatedUser(request);
   if (!user) return redirect("/auth/login");

@@ -11,6 +11,8 @@ import { Select } from "@bookshelf/ui/components/select";
 
 import { RouteModal, RouteModalCancel } from "~/components/layout/route-modal";
 
+export const meta: Route.MetaFunction = () => [{ title: "Add a book — Bookshelf" }];
+
 export async function loader({ request }: Route.LoaderArgs) {
   const user = await getAuthenticatedUser(request);
   if (!user) return redirect("/auth/login");

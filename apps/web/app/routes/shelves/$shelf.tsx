@@ -39,6 +39,15 @@ const EMPTY_ART = `╭───────────────────�
                                    
 ╰───────────────────────────────────╯`;
 
+export const meta: Route.MetaFunction = ({ params }) => {
+  const key = params.shelf?.toUpperCase() as ShelfKey | undefined;
+  const label = (key && SHELF_LABELS[key]) ?? params.shelf ?? "Shelf";
+  return [
+    { title: `${label} — Bookshelf` },
+    { name: "description", content: `Books on your ${label} shelf.` },
+  ];
+};
+
 export async function loader({ request, params }: Route.LoaderArgs) {
   const user = await getAuthenticatedUser(request);
   const shelfKey = params.shelf.toUpperCase();
