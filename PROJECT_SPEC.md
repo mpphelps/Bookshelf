@@ -348,6 +348,14 @@ Each migration flowed dev → CI → prod via the full pipeline, exercising the 
 - [ ] 6.5: Redis caching for friends' shelves
 - [ ] 6.6: User Profile Edit — also lets email-signup users fill in `firstName`/`lastName` (currently email-as-firstName via `splitName` fallback; see Phase 4 follow-up note).
 
+### Phase 7: Workflows, AI & Communications (future)
+
+Two async, multi-step features that share Temporal for orchestration. Detailed design (OCR vs vision LLM, email provider, opt-in model, etc.) lives in per-feature docs written when each is queued up.
+
+- [ ] 7.1: Photo → "Want to Read" — upload or capture a shelf image; OCR + AI extract candidates; Open Library matches; user confirms; bulk-add to WANT_TO_READ. Temporal handles the async pipeline. Learning: image handling, OCR/vision AI, Temporal workflows. Depends on 6.1.
+- [ ] 7.2: Weekly progress email — Temporal cron fans out per user; personal stats + friend activity; React Email templates; one-click unsubscribe. Learning: transactional email + deliverability, basic analytics, Temporal cron/fan-out. Depends on 6.4.
+- [ ] Shared prerequisites: `Book.pageCount`/`isbn`/`coverUrl` (populated by 6.1), Temporal hosting (Pi self-host vs Cloud), `BookEvent` activity log written from the service layer.
+
 ---
 
 ## 9. Tech Versions
