@@ -9,9 +9,12 @@ Audience: anyone reproducing this stack on their own Pi, or future-me coming bac
 - [Architecture overview](#architecture-overview)
 - [Initial-setup lifecycle (one-time)](#initial-setup-lifecycle-one-time)
 - [Cloudflare Tunnel setup](#cloudflare-tunnel-setup)
+- [Auth0 RBAC for admin access](#auth0-rbac-for-admin-access)
+- [Cloudflare rate limiting](#cloudflare-rate-limiting)
 - [GitHub Actions self-hosted runner](#github-actions-self-hosted-runner)
 - [CI/CD workflows](#cicd-workflows)
 - [Secret management](#secret-management)
+- [Viewing application logs](#viewing-application-logs)
 - [Nightly Postgres backups](#nightly-postgres-backups)
 - [Manual backup](#manual-backup-on-demand)
 - [Restore to production (rollback)](#restore-to-production-rollback--disaster-recovery)
@@ -186,6 +189,83 @@ sudo systemctl status cloudflared
 - **Infinite redirect loop after login** — session cookie is `Secure`-only but the request reached the app over plain HTTP. Verify the tunnel is the path in (not the LAN IP) and that the Auth0 callback URL is `https://`.
 - **`cloudflared: command not found` after install** — the apt source line is wrong (RPM URL). Recheck step 1.
 
+## Auth0 RBAC for admin access
+
+The `/admin` route is gated on the `read:admin` permission, which must be present in the access-token's `permissions` claim. Configure this on the Auth0 **API** (not the Application).
+
+### 1. Enable RBAC on the API
+
+Auth0 dashboard → **Applications → APIs → Bookshelf-API → Settings**:
+
+- **Enable RBAC:** ON
+- **Add Permissions in the Access Token:** ON (becomes available after the first toggle)
+
+Without the second toggle, the JWT reaching the app has no `permissions` claim and every `requirePermission(...)` call throws.
+
+### 2. Define the permission
+
+Same API → **Permissions** tab → **+ Add a Permission**:
+
+| Field | Value |
+|---|---|
+| Permission (scope) | `read:admin` |
+| Description | `Access admin console` |
+
+### 3. Create the Admin role
+
+**User Management → Roles → + Create Role** — name it `Admin`. Click into the new role → **Permissions tab → Add Permissions** → pick **Bookshelf-API** → check `read:admin` → Add.
+
+### 4. Assign the role to a user
+
+**User Management → Users → click your user → Roles tab → Assign Roles** → check `Admin` → Assign.
+
+### 5. Re-authenticate to refresh the JWT
+
+The existing session still holds the *old* access token. Log out, log back in. The new access token carries `permissions: ["read:admin"]`.
+
+### Verifying
+
+Paste the access token from the session cookie into [jwt.io](https://jwt.io). Look for `"permissions": ["read:admin"]` in the payload. If empty, the most common miss is step 1's second toggle.
+
+## Cloudflare rate limiting
+
+A single combined rule throttles auth, mutation, and admin paths against scripted floods and credential stuffing. Free plan allows 1 rule total.
+
+### 1. Open the zone's WAF panel
+
+Cloudflare dashboard → pick `readingbookshelf.com` → **Security → WAF → Rate limiting rules** tab → **Create rule**.
+
+### 2. Fill in the rule
+
+| Field | Value |
+|---|---|
+| Rule name | `bookshelf-app-throttle` |
+| Filter mode | Custom filter expression |
+| Expression | `(starts_with(http.request.uri.path, "/auth/") or starts_with(http.request.uri.path, "/books/") or starts_with(http.request.uri.path, "/admin"))` |
+| Action | `Block` |
+| Requests | `100` |
+| Period | `1 minute` |
+| Counting characteristics | `IP` |
+| Action duration | `10 seconds` |
+
+Click **Deploy**.
+
+### 3. Verify
+
+Wait ~30 s for propagation, then from any terminal:
+
+```bash
+for i in {1..120}; do curl -o /dev/null -s -w "%{http_code} " https://readingbookshelf.com/auth/login; done
+```
+
+You should see `302` responses flip to `429` after ~100 requests. Wait 10 s, `302`s resume.
+
+### Troubleshooting
+
+- **Real users hitting 429** — check **Security → Events** for rule triggers. Raise the threshold to `200/min` if legitimate traffic patterns trip it.
+- **Rule never fires** — confirm the rate-limit rule is **Active** (green dot) in the list, and that the expression matches your path. The expression editor has a "Validate" button.
+- **Distributed abuse not blocked** — by design. CF rate limiting is per-IP; cross-IP throttling needs Bot Management (paid).
+
 ## GitHub Actions self-hosted runner
 
 A self-hosted runner is a daemon you install on the Pi that opens an outbound long-poll connection to GitHub and waits for jobs targeted at the label `self-hosted`. When a job arrives, it executes locally on the Pi — which is what lets the CD workflow do things like `git pull` and `docker compose up -d` against the live stack.
@@ -302,6 +382,12 @@ Stored as GitHub Secrets (Settings → Secrets and variables → Actions):
 
 Non-secret constants (`POSTGRES_USER=bookshelf`, `POSTGRES_DB=bookshelf`) are hardcoded in the workflow YAML. `DATABASE_URL` is derived in the workflow from `POSTGRES_PASSWORD` — never stored independently, so the two can't drift.
 
+### Optional non-secret env vars
+
+| Var | Default | Effect |
+|---|---|---|
+| `LOG_LEVEL` | `info` in prod, `debug` in dev | Pino log threshold (`trace \| debug \| info \| warn \| error \| fatal`). Bump to `debug` temporarily to troubleshoot a live issue; revert after. Declared in `turbo.json` `globalEnv`. |
+
 The CD step that writes `.env` (`Materialize .env from GitHub Secrets` in `cd.yml`):
 
 1. **Sanity-checks that every required secret is non-empty** — fails the deploy fast if any are missing, rather than silently writing a broken `.env` that crashes the app
@@ -321,6 +407,57 @@ The CD step that writes `.env` (`Materialize .env from GitHub Secrets` in `cd.ym
 2. Add it to the `env:` block + the heredoc in `cd.yml`'s "Materialize .env" step
 3. Add to the sanity-check loop in the same step
 4. Push, deploy
+
+## Viewing application logs
+
+The app uses pino for structured logging. In prod every log line is one JSON object on stdout, captured by Docker. Lines tag mutations with an `action` field (`book.create`, `note.delete`, `auth.permission_denied`, etc.) and include `userId` + the relevant entity id.
+
+### Reading the stream
+
+```bash
+# Tail live
+docker logs -f bookshelf-prod-app-1
+
+# Last hour
+docker logs --since 1h bookshelf-prod-app-1
+
+# Last N lines
+docker logs --tail 200 bookshelf-prod-app-1
+```
+
+### Common filters
+
+```bash
+# All book deletes
+docker logs bookshelf-prod-app-1 | grep '"action":"book.delete"'
+
+# Permission denials (security signal)
+docker logs bookshelf-prod-app-1 | grep '"action":"auth.permission_denied"'
+
+# Warnings and above (pino: 40 = warn, 50 = error, 60 = fatal)
+docker logs bookshelf-prod-app-1 | grep -E '"level":(40|50|60)'
+
+# Everything a specific user did
+docker logs bookshelf-prod-app-1 | grep '"userId":"<cuid>"'
+```
+
+### Bumping verbosity temporarily
+
+`LOG_LEVEL` is read at container start, so changing it requires restarting the app. Either set it as a GitHub Secret + trigger a CD deploy, or for a one-off:
+
+```bash
+cd ~/Bookshelf
+LOG_LEVEL=debug docker compose -f docker-compose.prod.yml \
+  --env-file packages/database/.env up -d --force-recreate app
+```
+
+Revert afterwards — `debug` is noisy at scale.
+
+### Limitations
+
+- **Logs only live as long as Docker keeps them.** Default Docker driver rotates; old lines are dropped. For long retention, ship to Better Stack / Axiom / Loki (deferred).
+- **No request correlation.** Each line stands alone. Adding request IDs needs middleware (deferred).
+- **No PII redaction.** Log payloads include `userId` (cuid, opaque) and entity ids — not emails or content. If you add new log calls, be deliberate about the payload.
 
 ## Nightly Postgres backups
 
