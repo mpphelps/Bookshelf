@@ -2,6 +2,7 @@ import { BookNotFoundError, ForbiddenError, ShelfNotFoundError, ValidationError 
 import { bookRepository } from "../repositories/book.repository.server";
 import type { AuthUser } from "./auth.service.server";
 import { SHELF_LABELS, type ShelfKey } from "~/lib/shelves";
+import { logger } from "~/lib/logger.server";
 import type { BookCreateInput, BookUpdateInput } from "./book.schemas";
 
 export async function getShelvesOverview(user: AuthUser) {
@@ -41,12 +42,14 @@ export async function getBookForUser(user: AuthUser, bookId: string) {
 }
 
 export async function createBook(user: AuthUser, input: BookCreateInput) {
-  return bookRepository.create({
+  const book = await bookRepository.create({
     userId: user.id,
     title: input.title,
     authors: [input.author],
     shelf: input.shelf,
   });
+  logger.info({ userId: user.id, bookId: book.id, shelf: book.shelf, action: "book.create" }, "book created");
+  return book;
 }
 
 export async function updateBook(user: AuthUser, bookId: string, input: BookUpdateInput) {
@@ -61,13 +64,16 @@ export async function updateBook(user: AuthUser, bookId: string, input: BookUpda
     return book;
   }
 
-  return bookRepository.update(book.id, data);
+  const updated = await bookRepository.update(book.id, data);
+  logger.info({ userId: user.id, bookId: book.id, fields: Object.keys(data), action: "book.update" }, "book updated");
+  return updated;
 }
 
 export async function deleteBook(user: AuthUser, bookId: string) {
   const book = await getBookForUser(user, bookId);
 
   await bookRepository.delete(book.id);
+  logger.info({ userId: user.id, bookId: book.id, action: "book.delete" }, "book deleted");
   return book;
 }
 
@@ -75,8 +81,11 @@ export async function rateBook(user: AuthUser, bookId: string, rating: number) {
   const book = await getBookForUser(user, bookId);
 
   if (book.shelf !== "FINISHED") {
+    logger.warn({ userId: user.id, bookId, shelf: book.shelf, action: "book.rate" }, "rating rejected: not on FINISHED shelf");
     throw new ValidationError({ rating: "Can only rate finished books" });
   }
 
-  return bookRepository.update(book.id, { rating });
+  const updated = await bookRepository.update(book.id, { rating });
+  logger.info({ userId: user.id, bookId, rating, action: "book.rate" }, "book rated");
+  return updated;
 }

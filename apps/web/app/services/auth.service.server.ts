@@ -1,4 +1,5 @@
 import { ForbiddenError } from "~/lib/errors";
+import { logger } from "~/lib/logger.server";
 import { exchangeCodeForTokens, verifyAccessToken, verifyIdToken } from "../lib/auth0.server";
 import { getSessionToken, getTestSessionEmail, getTestSessionPermissions } from "../lib/session.server";
 import { userRepository } from "../repositories/user.repository.server";
@@ -89,6 +90,7 @@ export async function getAuthenticatedUser(request: Request): Promise<AuthUser |
 
 export function requirePermission(user: AuthUser, permission: string): void {
   if (!user.permissions.includes(permission)) {
+    logger.warn({ userId: user.id, permission, action: "auth.permission_denied" }, "permission denied");
     throw new ForbiddenError(`User does not have permission: ${permission}`);
   }
 }
