@@ -1,7 +1,8 @@
-import { Form, isRouteErrorResponse, redirect, useActionData } from "react-router";
+import { Form, redirect, useActionData } from "react-router";
 import { getAuthenticatedUser } from "~/services/auth.service.server";
 import { createBook } from "~/services/book.service.server";
 import { ValidationError } from "~/lib/errors";
+import { makeModalErrorBoundary } from "~/lib/error-boundary";
 import type { Route } from "./+types/new";
 
 import { Button } from "@bookshelf/ui/components/button";
@@ -38,18 +39,9 @@ export async function action({ request }: Route.ActionArgs) {
   }
 }
 
-export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
-  if (isRouteErrorResponse(error)) {
-    return (
-      <RouteModal returnTo="/" title="Error" description={`${error.status} · ${error.data}`}>
-        <p className="font-mono text-xs text-muted-foreground" role="alert">
-          {error.data}
-        </p>
-      </RouteModal>
-    );
-  }
-  throw error;
-}
+export const ErrorBoundary = makeModalErrorBoundary({
+  getReturnTo: () => "/",
+});
 
 export default function NewBook() {
   const actionData = useActionData<typeof action>();

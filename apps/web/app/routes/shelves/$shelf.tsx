@@ -1,8 +1,9 @@
-import { Link, isRouteErrorResponse, redirect } from "react-router";
+import { Link, redirect } from "react-router";
 import { getAuthenticatedUser } from "~/services/auth.service.server";
 import { getBooksOnShelf } from "~/services/book.service.server";
 import { SHELF_LABELS, type ShelfKey } from "~/lib/shelves";
 import { ShelfNotFoundError } from "~/lib/errors";
+import { makeRouteErrorBoundary } from "~/lib/error-boundary";
 import type { Route } from "./+types/$shelf";
 
 import { BracketDivider } from "@bookshelf/ui/components/bracket-divider";
@@ -16,7 +17,6 @@ import { TransmissionFooter } from "~/components/layout/transmission-footer";
 import { BackLink } from "~/components/layout/back-link";
 import { ManifestHeader } from "~/components/layout/manifest-header";
 import { EmptyTransmission } from "~/components/layout/empty-transmission";
-import { RouteErrorPanel } from "~/components/layout/route-error-panel";
 import { BookListItem } from "~/components/books/book-list-item";
 import { formatCount, timestamp } from "~/lib/format";
 import { displayName } from "~/lib/name";
@@ -58,19 +58,10 @@ export async function loader({ request, params }: Route.LoaderArgs) {
   }
 }
 
-export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
-  if (isRouteErrorResponse(error)) {
-    return (
-      <RouteErrorPanel
-        microLabel="signal lost"
-        status={error.status}
-        message={error.data}
-        description="the requested channel could not be opened."
-      />
-    );
-  }
-  throw error;
-}
+export const ErrorBoundary = makeRouteErrorBoundary({
+  microLabel: "signal lost",
+  description: "the requested channel could not be opened.",
+});
 
 export default function ShelfRoute({ loaderData }: Route.ComponentProps) {
   const { user, books, shelfKey } = loaderData;
