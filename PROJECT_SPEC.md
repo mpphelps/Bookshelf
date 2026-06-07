@@ -332,7 +332,7 @@ Each migration flowed dev → CI → prod via the full pipeline, exercising the 
 
 **Open follow-up (deferred):** Auth0 database-connection signups (email + password) don't collect `firstName`/`lastName` by default — current behavior falls back to `splitName(name)`, which puts the email address into `firstName` for users who never provided a name. Profile-edit flow (Phase 6.6) addresses this.
 
-### Phase 5: Polish & Advanced ✅
+### Phase 5: Polish & Advanced ✅ (closed 2026-06-07)
 
 - [x] Error boundaries — root-level catch-all + per-route boundaries via factory (`makeRouteErrorBoundary` / `makeModalErrorBoundary`); status-keyed default copy via `ErrorLookup` in `lib/errors.ts`
 - 🚫 Optimistic UI — skipped. Existing `<Form>` submissions are idempotent and the Submit button already handles in-flight cancellation; no pain point worth solving.
