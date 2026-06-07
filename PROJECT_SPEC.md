@@ -360,6 +360,7 @@ Two async, multi-step features that share Temporal for orchestration. Detailed d
 
 - [ ] 7.1: Photo → "Want to Read" — upload or capture a shelf image; OCR + AI extract candidates; Open Library matches; user confirms; bulk-add to WANT_TO_READ. Temporal handles the async pipeline. Learning: image handling, OCR/vision AI, Temporal workflows. Depends on 6.1.
 - [ ] 7.2: Weekly progress email — Temporal cron fans out per user; personal stats + friend activity; React Email templates; one-click unsubscribe. Learning: transactional email + deliverability, basic analytics, Temporal cron/fan-out. Depends on 6.4.
+- [ ] 7.3: Self-hosted Plausible analytics on the Pi — Plausible + ClickHouse + Postgres containers in `docker-compose.prod.yml`, Cloudflare Tunnel route for `stats.readingbookshelf.com`, tracker script in `root.tsx`, CSP allowlist update. Learning: side-by-side service deploy, cohabitation on shared Pi, third-party CSP, optional custom-event tracking.
 - [ ] Shared prerequisites: `Book.pageCount`/`isbn`/`coverUrl` (populated by 6.1), Temporal hosting (Pi self-host vs Cloud), `BookEvent` activity log written from the service layer.
 
 ---
